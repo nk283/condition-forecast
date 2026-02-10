@@ -20,12 +20,18 @@ if %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
+echo Waiting for dashboard generation...
+timeout /t 2 /nobreak
+
+echo Opening dashboard in browser...
+if exist dashboard.html (
+    start "" "dashboard.html"
+) else (
+    echo Error: dashboard.html not found
+)
+
+echo.
 echo Complete
 echo.
-
-if exist dashboard.html (
-    echo Opening dashboard in browser...
-    start "" dashboard.html
-)
 
 pause
