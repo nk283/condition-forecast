@@ -68,26 +68,31 @@ async function forecastCondition() {
     dataStorage.saveHourlyScores(hourlyScores);
     console.log('✓ 時間別スコアを保存');
 
-    // 5. 今日のスコア（12時時点）を取得（レポート用）
-    const todayIndex = 24; // 昨日0:00 + 24 = 今日0:00, さらに+12=今日12:00
-    const todayNoonScore = hourlyScores[todayIndex + 12] || hourlyScores[todayIndex];
-    const todayWeather = todayNoonScore.weatherData;
+    // 5. 現在時刻のスコアを取得（レポート用）
+    // 開始時刻が「本日00:00」なので、インデックス = 現在時刻（時間単位）
+    const currentHour = now.getHours();
+    const currentIndex = Math.max(0, Math.min(71, currentHour)); // 0-71の範囲
+    const currentScore = hourlyScores[currentIndex] || hourlyScores[0];
+    const currentWeather = currentScore.weatherData || {};
 
     // 6. レポート生成（互換性のため）
     console.log('\n📋 レポートを生成しています...');
     const reportGenerator = new ReportGenerator();
     const todayConditionData = {
-      temperature: todayWeather.temperature,
-      humidity: todayWeather.humidity,
-      pressure: todayWeather.pressure,
-      cloudCoverage: todayWeather.cloudiness,
-      aqi: 50
+      temperature: currentWeather.temperature || 15,
+      humidity: currentWeather.humidity || 60,
+      pressure: currentWeather.pressure || 1013,
+      cloudCoverage: currentWeather.cloudiness || 50,
+      aqi: 50,
+      temperatureMax: currentWeather.temperature || 15,
+      temperatureMin: currentWeather.temperature || 15,
+      scheduleAnalysis: { hasEvents: false, hasMeetings: false, hasOutdoorActivities: false, sleepInterruption: false, mealInterruption: false }
     };
-    const todayDetailedAnalysis = scoreEngine.getDetailedAnalysis(todayNoonScore.factorScores, todayConditionData);
+    const todayDetailedAnalysis = scoreEngine.getDetailedAnalysis(currentScore.factorScores, todayConditionData);
     const report = reportGenerator.generateReport(
-      { totalScore: todayNoonScore.totalScore, factorScores: todayNoonScore.factorScores, evaluation: scoreEngine.getEvaluation(todayNoonScore.totalScore) },
+      { totalScore: currentScore.totalScore, factorScores: currentScore.factorScores, evaluation: scoreEngine.getEvaluation(currentScore.totalScore) },
       todayDetailedAnalysis,
-      todayWeather,
+      currentWeather,
       now
     );
 
