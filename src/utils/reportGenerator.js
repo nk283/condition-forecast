@@ -37,6 +37,7 @@ class ReportGenerator {
     report += '─────────────────────\n';
     const factors = [
       { name: '気温', key: 'temperature', emoji: '🌡️' },
+      { name: '気温差', key: 'temperatureDifference', emoji: '🌡️' },
       { name: '湿度', key: 'humidity', emoji: '💧' },
       { name: '日照', key: 'illumination', emoji: '☀️' },
       { name: '空気質', key: 'airQuality', emoji: '💨' },
@@ -46,8 +47,10 @@ class ReportGenerator {
 
     factors.forEach(factor => {
       const score = result.factorScores[factor.key];
-      const bar = this.createScoreBar(score);
-      report += `${factor.emoji} ${factor.name}: ${score}/100 ${bar}\n`;
+      if (score === undefined) return; // スコアがない場合はスキップ
+      const roundedScore = Math.round(score);
+      const bar = this.createScoreBar(roundedScore);
+      report += `${factor.emoji} ${factor.name}: ${roundedScore}/100 ${bar}\n`;
     });
 
     report += '\n';
@@ -85,6 +88,12 @@ class ReportGenerator {
    * JSON形式のレポートを生成
    */
   generateJsonReport(result, detailedAnalysis, weatherData, date) {
+    // 各スコアを整数に丸める
+    const roundedFactorScores = {};
+    Object.keys(result.factorScores).forEach(key => {
+      roundedFactorScores[key] = Math.round(result.factorScores[key]);
+    });
+
     return {
       date: date.toISOString(),
       score: {
@@ -92,7 +101,7 @@ class ReportGenerator {
         evaluation: result.evaluation.level,
         advice: result.evaluation.advice
       },
-      factorScores: result.factorScores,
+      factorScores: roundedFactorScores,
       weather: {
         temperature: weatherData.temperature,
         feelsLike: weatherData.feelsLike,

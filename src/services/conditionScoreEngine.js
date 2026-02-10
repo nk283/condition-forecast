@@ -5,7 +5,8 @@
 class ConditionScoreEngine {
   constructor() {
     this.weights = {
-      temperature: 0.25,
+      temperature: 0.20,
+      temperatureDifference: 0.05,
       humidity: 0.15,
       illumination: 0.20,
       airQuality: 0.15,
@@ -16,45 +17,56 @@ class ConditionScoreEngine {
 
   /**
    * 気温スコアを計算（5℃～10℃が最適）
-   * 気温差（tempMax - tempMin）も考慮
    */
-  calculateTemperatureScore(temp, tempMax = null, tempMin = null) {
+  calculateTemperatureScore(temp) {
     // 最適温度: 5℃～10℃
     const optimalMin = 5;
     const optimalMax = 10;
     const comfortMin = 5;
     const comfortMax = 20;
 
-    let baseScore = 50;
-
     if (temp >= optimalMin && temp <= optimalMax) {
-      baseScore = 100; // 最適
-    } else if (temp >= comfortMin && temp <= comfortMax) {
+      return 100; // 最適
+    }
+
+    if (temp >= comfortMin && temp <= comfortMax) {
       // 快適範囲内: 70-100
       if (temp < optimalMin) {
-        baseScore = 70 + ((temp - comfortMin) / (optimalMin - comfortMin)) * 30;
+        return 70 + ((temp - comfortMin) / (optimalMin - comfortMin)) * 30;
       } else {
-        baseScore = 70 + ((comfortMax - temp) / (comfortMax - optimalMax)) * 30;
-      }
-    } else if (temp < comfortMin) {
-      // 寒冷: 0℃以下
-      baseScore = Math.max(10, 70 - (comfortMin - temp) * 5);
-    } else if (temp > comfortMax) {
-      // 高温: 20℃以上
-      baseScore = Math.max(20, 70 - (temp - comfortMax) * 5);
-    }
-
-    // 気温差ペナルティ（tempMax と tempMin が提供されている場合）
-    if (tempMax !== null && tempMin !== null) {
-      const tempDiff = tempMax - tempMin;
-      // 気温差が10℃を超える場合は減点
-      if (tempDiff > 10) {
-        const penalty = (tempDiff - 10) * 3; // 1℃あたり3点減点
-        baseScore -= penalty;
+        return 70 + ((comfortMax - temp) / (comfortMax - optimalMax)) * 30;
       }
     }
 
-    return Math.max(10, baseScore);
+    if (temp < comfortMin) {
+      // 寒冷
+      return Math.max(10, 70 - (comfortMin - temp) * 5);
+    }
+
+    // 高温: 20℃以上
+    return Math.max(20, 70 - (temp - comfortMax) * 5);
+  }
+
+  /**
+   * 気温差スコアを計算
+   * 気温差が大きい場合は低スコア
+   */
+  calculateTemperatureDifferenceScore(tempMax, tempMin) {
+    if (tempMax === null || tempMin === null) {
+      return 100; // データなしの場合は満点
+    }
+
+    const tempDiff = tempMax - tempMin;
+
+    // 気温差が安定している（10℃以下）→ 100点
+    if (tempDiff <= 10) {
+      return 100;
+    }
+
+    // 気温差が10℃を超える場合は減点
+    // 気温差15℃ = 85点、20℃ = 70点、25℃ = 55点など
+    const penalty = (tempDiff - 10) * 3; // 1℃あたり3点減点
+    return Math.max(10, 100 - penalty);
   }
 
   /**
@@ -199,8 +211,8 @@ class ConditionScoreEngine {
     const hour = data.hour !== undefined ? data.hour : new Date().getHours();
 
     const scores = {
-      temperature: this.calculateTemperatureScore(
-        data.temperature,
+      temperature: this.calculateTemperatureScore(data.temperature),
+      temperatureDifference: this.calculateTemperatureDifferenceScore(
         data.temperatureMax || null,
         data.temperatureMin || null
       ),
@@ -214,6 +226,7 @@ class ConditionScoreEngine {
     // 加重合計
     const totalScore =
       scores.temperature * this.weights.temperature +
+      scores.temperatureDifference * this.weights.temperatureDifference +
       scores.humidity * this.weights.humidity +
       scores.illumination * this.weights.illumination +
       scores.airQuality * this.weights.airQuality +

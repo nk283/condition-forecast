@@ -353,7 +353,7 @@ class HtmlDashboardGenerator {
           <div class="gauge">
             <div style="text-align: center;">
               <div style="font-size: 0.5em; color: #666;">スコア</div>
-              <div>${report.json.score.total}/100</div>
+              <div>${Math.round(report.json.score.total)}/100</div>
             </div>
           </div>
         </div>
@@ -377,20 +377,45 @@ class HtmlDashboardGenerator {
       ${forecastDates.length > 0 ? `
       <div class="card" style="grid-column: 1 / -1;">
         <h2>🔮 未来5日間の体調予報</h2>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 15px;">
           ${forecastDates.map((date, idx) => {
             const forecastItem = forecastData[date];
             const dateObj = new Date(date);
             const dateLabel = dateObj.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
             const evaluation = this.getEvaluationEmoji(forecastItem.totalScore);
-            return `
-            <div style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 12px; text-align: center; background: #f9f9f9;">
-              <div style="font-weight: bold; color: #666; margin-bottom: 8px;">${dateLabel}</div>
-              <div style="font-size: 1.8em; margin-bottom: 8px;">${forecastItem.totalScore}</div>
-              <div style="font-size: 2em;">${evaluation}</div>
-              <div style="font-size: 0.8em; color: #999; margin-top: 8px;">${this.getEvaluationLevel(forecastItem.totalScore)}</div>
-            </div>
-            `;
+            const factors = [
+              { label: '🌡️ 気温', key: 'temperature' },
+              { label: '🌡️ 気温差', key: 'temperatureDifference' },
+              { label: '💧 湿度', key: 'humidity' },
+              { label: '☀️ 日照', key: 'illumination' },
+              { label: '💨 空気質', key: 'airQuality' },
+              { label: '🎈 気圧', key: 'pressure' },
+              { label: '📅 スケジュール', key: 'schedule' }
+            ];
+            const factorHtml = factors.map(factor => {
+              const score = forecastItem.factorScores[factor.key];
+              if (score === undefined) return '';
+              const color = this.getScoreColor(score);
+              return '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                '<span>' + factor.label + '</span>' +
+                '<span style="font-weight: bold; color: ' + color + ';">' + Math.round(score) + '</span>' +
+                '</div>';
+            }).join('');
+            return '<div style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 15px; background: #f9f9f9;">' +
+              '<div style="font-weight: bold; color: #666; margin-bottom: 10px; font-size: 1.1em;">' + dateLabel + '</div>' +
+              '<div style="display: flex; align-items: center; gap: 15px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 2px solid #e0e0e0;">' +
+              '<div style="text-align: center;">' +
+              '<div style="font-size: 2em; font-weight: bold;">' + Math.round(forecastItem.totalScore) + '</div>' +
+              '<div style="font-size: 2em;">' + evaluation + '</div>' +
+              '</div>' +
+              '<div style="font-size: 0.85em; color: #666;">' +
+              this.getEvaluationLevel(forecastItem.totalScore) +
+              '</div>' +
+              '</div>' +
+              '<div style="font-size: 0.85em; line-height: 1.8;">' +
+              factorHtml +
+              '</div>' +
+              '</div>';
           }).join('')}
         </div>
       </div>
@@ -486,6 +511,7 @@ class HtmlDashboardGenerator {
   generateFactorScores(factorScores) {
     const factors = [
       { label: '🌡️ 気温', key: 'temperature' },
+      { label: '🌡️ 気温差', key: 'temperatureDifference' },
       { label: '💧 湿度', key: 'humidity' },
       { label: '☀️ 日照', key: 'illumination' },
       { label: '💨 空気質', key: 'airQuality' },
@@ -495,15 +521,17 @@ class HtmlDashboardGenerator {
 
     return factors.map(factor => {
       const score = factorScores[factor.key];
-      const color = this.getScoreColor(score);
+      if (score === undefined) return ''; // スコアがない場合はスキップ
+      const roundedScore = Math.round(score);
+      const color = this.getScoreColor(roundedScore);
 
       return `
         <div class="factor-item">
           <div class="factor-label">${factor.label}</div>
           <div class="factor-bar">
-            <div class="factor-bar-fill" style="width: ${score}%; background: ${color};"></div>
+            <div class="factor-bar-fill" style="width: ${roundedScore}%; background: ${color};"></div>
           </div>
-          <div class="factor-value">${score}/100</div>
+          <div class="factor-value">${roundedScore}/100</div>
         </div>
       `;
     }).join('');

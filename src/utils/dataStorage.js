@@ -36,6 +36,7 @@ class DataStorage {
         totalScore: Math.round(totalScore),
         factorScores: {
           temperature: Math.round(factorScores.temperature),
+          temperatureDifference: factorScores.temperatureDifference !== undefined ? Math.round(factorScores.temperatureDifference) : 100,
           humidity: Math.round(factorScores.humidity),
           illumination: Math.round(factorScores.illumination),
           airQuality: Math.round(factorScores.airQuality),
@@ -75,6 +76,7 @@ class DataStorage {
         totalScore: Math.round(totalScore),
         factorScores: {
           temperature: Math.round(factorScores.temperature),
+          temperatureDifference: factorScores.temperatureDifference !== undefined ? Math.round(factorScores.temperatureDifference) : 100,
           humidity: Math.round(factorScores.humidity),
           illumination: Math.round(factorScores.illumination),
           airQuality: Math.round(factorScores.airQuality),
