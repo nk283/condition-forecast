@@ -24,10 +24,12 @@ echo Waiting for dashboard generation...
 timeout /t 2 /nobreak
 
 echo Opening dashboard in browser...
-if exist dashboard.html (
+if exist dashboard_72h.html (
+    start "" "dashboard_72h.html"
+) else if exist dashboard.html (
     start "" "dashboard.html"
 ) else (
-    echo Error: dashboard.html not found
+    echo Error: dashboard file not found
 )
 
 echo.
