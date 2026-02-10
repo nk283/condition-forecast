@@ -1,58 +1,51 @@
 @echo off
-REM Windows Task Scheduler 自動実行設定バッチファイル
-REM 注意: このファイルを『管理者として実行』してください
-REM エンコーディング: Shift-JIS
+REM Setup Windows Task Scheduler for Daily Execution
+REM Encoding: Shift-JIS
+REM Note: Requires administrator rights
 
 echo.
 echo ========================================
-echo   体調予報 Task Scheduler 自動実行設定
+echo   Setup Task Scheduler
 echo ========================================
 echo.
 
-REM 管理者権限確認
+REM Check admin rights
 net session >nul 2>&1
 if %ERRORLEVEL% NEQ 0 (
-    echo エラー: このスクリプトには管理者権限が必要です
+    echo Error: This script requires administrator rights
     echo.
-    echo 実行方法:
-    echo 1. このファイルを右クリック
-    echo 2. 「管理者として実行」を選択
+    echo How to run:
+    echo 1. Right-click this file
+    echo 2. Select "Run as administrator"
     echo.
     pause
     exit /b 1
 )
 
-echo タスクを登録しています...
+echo Registering task...
 echo.
 
-REM 既存タスクを削除（存在する場合）
+REM Delete existing task if present
 taskkill /FI "TASKNAME eq 体調予報システム_毎日実行" /T /F >nul 2>&1
 schtasks /delete /tn "体調予報システム_毎日実行" /f >nul 2>&1
 
-REM 新しいタスクを作成
+REM Create new task
 schtasks /create /tn "体調予報システム_毎日実行" ^
     /tr "powershell.exe -ExecutionPolicy Bypass -File C:\Users\user\claude\Projects\Condition_Forecast\run_daily_forecast.ps1" ^
     /sc daily /st 08:00:00 /ru %USERNAME% >nul 2>&1
 
 if %ERRORLEVEL% EQU 0 (
     echo.
-    echo Task Scheduler に登録されました
+    echo Task registered successfully
     echo.
-    echo タスク名: 体調予報システム_毎日実行
-    echo 実行時間: 毎日 朝8時
-    echo スクリプト: run_daily_forecast.ps1
-    echo.
-    echo 確認方法:
-    echo 1. Windows キー + R を押す
-    echo 2. 「taskschd.msc」と入力して Enter
-    echo 3. 「タスク スケジューラー ライブラリ」で確認
+    echo Task name: 体調予報システム_毎日実行
+    echo Run time: Daily at 08:00
+    echo Script: run_daily_forecast.ps1
     echo.
 ) else (
     echo.
-    echo エラー: タスク登録に失敗しました
-    echo エラーコード: %ERRORLEVEL%
-    echo.
-    echo 管理者権限が有効か確認してください
+    echo Failed to register task
+    echo Error code: %ERRORLEVEL%
     echo.
 )
 

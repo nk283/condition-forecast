@@ -1,15 +1,14 @@
 @echo off
-REM デスクトップショートカット作成バッチファイル
-REM このファイルをダブルクリックして実行してください
-REM エンコーディング: Shift-JIS
+REM Create Desktop Shortcut for Condition Forecast
+REM Encoding: Shift-JIS
 
 echo.
 echo ========================================
-echo   体調予報 デスクトップショートカット作成
+echo   Create Desktop Shortcut
 echo ========================================
 echo.
 
-REM PowerShellで新しいプロセスを起動
+REM Launch PowerShell to create shortcut
 powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$DesktopPath = [Environment]::GetFolderPath('Desktop'); " ^
   "$ShortcutPath = Join-Path $DesktopPath '体調予報.lnk'; " ^
@@ -18,21 +17,20 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$Shortcut = $WshShell.CreateShortcut($ShortcutPath); " ^
   "$Shortcut.TargetPath = $TargetPath; " ^
   "$Shortcut.WorkingDirectory = 'C:\Users\user\claude\Projects\Condition_Forecast'; " ^
-  "$Shortcut.Description = '体調予報システムを実行します'; " ^
+  "$Shortcut.Description = 'Body Condition Forecast'; " ^
   "$Shortcut.Save(); " ^
-  "Write-Host 'ショートカットを作成しました'; " ^
-  "Write-Host 'パス: ' $ShortcutPath; " ^
-  "Write-Host 'ターゲット: ' $TargetPath"
+  "Write-Host 'Shortcut created'; " ^
+  "Write-Host 'Path: ' $ShortcutPath; " ^
+  "Write-Host 'Target: ' $TargetPath"
 
 if %ERRORLEVEL% EQU 0 (
     echo.
-    echo ショートカット作成が完了しました
-    echo デスクトップに「体調予報.lnk」が表示されます
+    echo Shortcut created successfully
     echo.
 ) else (
     echo.
-    echo ショートカット作成に失敗しました
-    echo エラーコード: %ERRORLEVEL%
+    echo Failed to create shortcut
+    echo Error code: %ERRORLEVEL%
     echo.
 )
 

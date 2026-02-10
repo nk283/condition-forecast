@@ -1,13 +1,12 @@
 @echo off
-REM 体調予報を実行するバッチファイル
-REM このファイルをダブルクリックして実行してください
-REM エンコーディング: Shift-JIS
+REM Condition Forecast - Body Condition Prediction System
+REM Encoding: Shift-JIS
 
 cd /d "C:\Users\user\claude\Projects\Condition_Forecast"
 
 echo.
 echo ========================================
-echo    体調予報システムを起動しています
+echo    Condition Forecast - Running...
 echo ========================================
 echo.
 
@@ -15,17 +14,17 @@ npm start
 
 if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo エラーが発生しました
-    echo エラーコード: %ERRORLEVEL%
+    echo Error occurred
+    echo Error code: %ERRORLEVEL%
     echo.
 )
 
 echo.
-echo 完了しました
+echo Complete
 echo.
 
 if exist dashboard.html (
-    echo ダッシュボードをブラウザで開きます...
+    echo Opening dashboard in browser...
     start "" dashboard.html
 )
 
