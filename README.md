@@ -166,6 +166,19 @@ powershell -ExecutionPolicy Bypass -File setup_task_scheduler.ps1
 - Windows Task Scheduler で毎日自動実行可能
 - ログファイルに実行結果を記録
 
+## 🔤 ファイルエンコーディングルール
+
+**Windows日本語環境での文字化け防止ルール**:
+
+| ファイル種 | エンコーディング | 設定方法 |
+|-----------|---|---|
+| `.bat` | **Shift-JIS** | VS Code: `"[bat]": {"files.encoding": "shiftjis"}` |
+| `.ps1` | **Shift-JIS** | VS Code: `"[powershell]": {"files.encoding": "shiftjis"}` |
+| `.js` | **UTF-8** | VS Code: `"[javascript]": {"files.encoding": "utf8"}` |
+| `.md`, `.json` | **UTF-8** | VS Code: `"[markdown]": {"files.encoding": "utf8"}` |
+
+詳細は [ENCODING_RULES.md](ENCODING_RULES.md) を参照
+
 ## 📅 今後の実装予定
 
 ### Phase 3
