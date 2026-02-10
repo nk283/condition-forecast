@@ -6,6 +6,8 @@
   "scripts": {
     "start": "node src/index.js",
     "forecast": "node src/index.js",
+    "auth": "node src/utils/authHelper.js",
+    "calendar": "node src/utils/calendarTest.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -17,6 +19,7 @@
     "chart.js": "^4.5.1",
     "dotenv": "^17.2.4",
     "googleapis": "^171.4.0",
-    "node-html-to-image": "^5.0.0"
+    "node-html-to-image": "^5.0.0",
+    "open": "^11.0.0"
   }
 }

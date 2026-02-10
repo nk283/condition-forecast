@@ -66,6 +66,7 @@ OUTPUT_FORMAT=json
 3. Google Calendar API を有効化
 4. OAuth 2.0 認証情報を作成
 5. 認証情報を `.env` に設定
+6. 認証を完了: `npm run auth`
 
 ## 📖 使い方
 
@@ -73,6 +74,18 @@ OUTPUT_FORMAT=json
 ```bash
 node demo.js
 ```
+
+### Google Calendar を連携する（初回のみ）
+```bash
+npm run auth
+```
+ブラウザで Google アカウントにログインし、認証コードをコンソールに入力します。
+
+### カレンダーデータをテストする
+```bash
+npm run calendar
+```
+本日の予定を取得し、スケジュール分析結果を表示します。
 
 ### 実際のシステムを実行
 ```bash
@@ -88,6 +101,11 @@ npm run forecast
 ✅ **気象データ取得**
 - OpenWeather API から気温、湿度、気圧、日照データを取得
 
+✅ **Google Calendar 連携**
+- OAuth 2.0 認証フロー
+- 予定の自動取得と分析
+- 人との会合、外出、睡眠・食事の阻害を自動判定
+
 ✅ **体調スコア計算エンジン**
 - 各要因（気温、湿度、日照、空気質、気圧、スケジュール）を数値化
 - 加重合計で総合スコアを算出
@@ -102,8 +120,7 @@ npm run forecast
 
 ## 📅 今後の実装予定
 
-### Phase 2
-- [ ] Google Calendar 統合（実装用の認証フロー）
+### Phase 3
 - [ ] より詳細な日照データ取得
 - [ ] Air Quality API の本格統合
 

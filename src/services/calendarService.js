@@ -56,12 +56,70 @@ class CalendarService {
   }
 
   /**
-   * トークンをリフレッシュ
+   * 認証済みか確認
+   */
+  isAuthenticated() {
+    return fs.existsSync(this.tokenPath);
+  }
+
+  /**
+   * トークンが有効か確認
+   */
+  hasValidToken() {
+    if (!this.isAuthenticated()) {
+      return false;
+    }
+
+    try {
+      const token = JSON.parse(fs.readFileSync(this.tokenPath));
+      // トークンの有効期限チェック
+      if (token.expiry_date && new Date(token.expiry_date) < new Date()) {
+        return false; // 期限切れ
+      }
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  /**
+   * トークンをリフレッシュ（認証コードから新規取得）
    */
   async refreshToken(code) {
+    if (!this.oauth2Client) {
+      this.initOAuth2Client();
+    }
     const { tokens } = await this.oauth2Client.getToken(code);
     this.oauth2Client.setCredentials(tokens);
     fs.writeFileSync(this.tokenPath, JSON.stringify(tokens));
+  }
+
+  /**
+   * トークンを自動更新（リフレッシュトークンを使用）
+   */
+  async autoRefreshToken() {
+    try {
+      if (!this.oauth2Client) {
+        this.initOAuth2Client();
+      }
+
+      const token = JSON.parse(fs.readFileSync(this.tokenPath));
+      this.oauth2Client.setCredentials(token);
+
+      // トークンをリフレッシュ
+      const { credentials } = await this.oauth2Client.refreshAccessToken();
+      const updatedToken = {
+        ...credentials,
+        refresh_token: credentials.refresh_token || token.refresh_token
+      };
+
+      fs.writeFileSync(this.tokenPath, JSON.stringify(updatedToken));
+      this.oauth2Client.setCredentials(updatedToken);
+      return true;
+    } catch (error) {
+      console.error('トークン自動更新エラー:', error.message);
+      return false;
+    }
   }
 
   /**
@@ -71,6 +129,15 @@ class CalendarService {
     try {
       if (!this.calendar) {
         this.initCalendarClient();
+      }
+
+      // トークンが期限切れの場合は自動更新
+      if (!this.hasValidToken()) {
+        const refreshed = await this.autoRefreshToken();
+        if (!refreshed) {
+          throw new Error('トークンの更新に失敗しました。もう一度認証してください。');
+        }
+        this.initCalendarClient(); // トークン更新後にクライアントを再初期化
       }
 
       const response = await this.calendar.events.list({

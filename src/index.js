@@ -31,9 +31,9 @@ async function forecastCondition() {
     const weatherData = await weatherService.getCurrentWeather();
     console.log('✓ 気象データを取得');
 
-    // カレンダーデータは認証が必要なため、サンプルデータを使用
+    // カレンダーデータを取得
     const today = new Date();
-    const sampleSchedule = {
+    let scheduleAnalysis = {
       hasEvents: false,
       eventCount: 0,
       hasMeetings: false,
@@ -42,7 +42,23 @@ async function forecastCondition() {
       mealInterruption: false,
       events: []
     };
-    console.log('✓ カレンダーデータを取得');
+
+    // Google Calendar 認証確認
+    if (calendarService.isAuthenticated()) {
+      try {
+        const calendarEvents = await calendarService.getEventsForDate(today);
+        scheduleAnalysis = calendarService.analyzeSchedule(calendarEvents);
+        console.log('✓ カレンダーデータを取得');
+      } catch (error) {
+        console.warn('⚠️  カレンダーデータ取得エラー:', error.message);
+        console.warn('   サンプルデータを使用します');
+      }
+    } else {
+      console.warn('⚠️  Google Calendar 認証未完了');
+      console.warn('   Google Calendar 連携を有効化するには以下を実行:');
+      console.warn('   npm run auth');
+      console.warn('   サンプルデータを使用します');
+    }
 
     // 体調スコアを計算
     console.log('\n🧮 体調スコアを計算しています...');
@@ -52,8 +68,8 @@ async function forecastCondition() {
       pressure: weatherData.pressure,
       daylightHours: 6, // サンプル値（実際には日照データから計算）
       aqi: 50, // サンプル値（実際には空気質API から取得）
-      hasOutdoorPlans: sampleSchedule.hasOutdoorActivities,
-      scheduleAnalysis: sampleSchedule
+      hasOutdoorPlans: scheduleAnalysis.hasOutdoorActivities,
+      scheduleAnalysis: scheduleAnalysis
     };
 
     const result = scoreEngine.calculateTotalScore(conditionData);
