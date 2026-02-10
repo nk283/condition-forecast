@@ -125,12 +125,17 @@ class WeatherService {
 
       // 1時間刻みの配列を生成（72時間分）
       // 昨日00:00 ～ 明日23:00（72時間）
+      // 注意: API データはローカルタイムの Date オブジェクトで保持されているため、
+      // targetTime もローカルタイムで計算する
       for (let i = 0; i < 72; i++) {
         const targetTime = new Date(startTime.getTime() + i * 60 * 60 * 1000);
         const interpolatedData = this.interpolateWeatherData(forecast3h, targetTime);
 
+        // ローカルタイムを文字列で記録
+        const localDateTime = this.formatLocalDateTime(targetTime);
+
         hourlyData.push({
-          timestamp: targetTime.toISOString(),
+          timestamp: localDateTime,
           hour: targetTime.getHours(),
           date: targetTime.toLocaleDateString('ja-JP'),
           dateObj: targetTime,
@@ -170,11 +175,29 @@ class WeatherService {
     const targetTimeUnix = targetTime.getTime() / 1000;
 
     const totalDiff = afterTime - beforeTime; // 秒単位
+
+    // totalDiff が 0 の場合（before と after が同じ時刻）は補間不可
+    if (totalDiff === 0) {
+      return {
+        temperature: before.temperature || 15,
+        humidity: before.humidity || 60,
+        pressure: before.pressure || 1013,
+        cloudiness: before.cloudiness || 50,
+        windSpeed: before.windSpeed || 5,
+        feelsLike: before.feelsLike || 15,
+        visibility: before.visibility || 10000,
+        rainVolume: before.rainVolume || 0,
+        weatherMain: before.weatherMain || 'Clouds',
+        weatherDescription: before.weatherDescription || '曇り',
+        weatherIcon: before.weatherIcon || '04d'
+      };
+    }
+
     const targetDiff = targetTimeUnix - beforeTime;
     const ratio = targetDiff / totalDiff; // 0.0 ～ 1.0
 
     // 各要因を補間
-    return {
+    const interpolated = {
       temperature: this.lerp(before.temperature || 15, after.temperature || 15, ratio),
       humidity: this.lerp(before.humidity || 60, after.humidity || 60, ratio),
       pressure: this.lerp(before.pressure || 1013, after.pressure || 1013, ratio),
@@ -187,6 +210,38 @@ class WeatherService {
       weatherDescription: before.weatherDescription || '曇り',
       weatherIcon: before.weatherIcon || '04d'
     };
+
+    // NaN チェック: 計算結果が NaN なら before のデータを使用
+    if (isNaN(interpolated.temperature) || isNaN(interpolated.humidity)) {
+      return {
+        temperature: before.temperature || 15,
+        humidity: before.humidity || 60,
+        pressure: before.pressure || 1013,
+        cloudiness: before.cloudiness || 50,
+        windSpeed: before.windSpeed || 5,
+        feelsLike: before.feelsLike || 15,
+        visibility: before.visibility || 10000,
+        rainVolume: before.rainVolume || 0,
+        weatherMain: before.weatherMain || 'Clouds',
+        weatherDescription: before.weatherDescription || '曇り',
+        weatherIcon: before.weatherIcon || '04d'
+      };
+    }
+
+    return interpolated;
+  }
+
+  /**
+   * ローカルタイムを YYYY-MM-DD HH:mm:ss 形式で返す
+   */
+  formatLocalDateTime(date) {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    const seconds = String(date.getSeconds()).padStart(2, '0');
+    return `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
   }
 
   /**
