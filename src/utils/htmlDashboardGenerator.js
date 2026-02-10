@@ -843,6 +843,13 @@ class HtmlDashboardGenerator {
     const humidities = hourlyScores.map(s => s.weatherData?.humidity || 60);
     const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || 50);
 
+    // 軸範囲を計算（データに応じて動的調整）
+    const scoreAxisRange = this.calculateScoreAxisRange(totalScores);
+    const tempAxisRange = this.calculateDataAxisRange(temperatures);
+    const tempDiffAxisRange = this.calculateDataAxisRange(tempDifferences);
+    const humidityAxisRange = this.calculateDataAxisRange(humidities);
+    const cloudAxisRange = this.calculateDataAxisRange(cloudCovers);
+
     // 現在時刻を取得
     const now = new Date();
     let currentIndex = -1;
@@ -1109,7 +1116,10 @@ class HtmlDashboardGenerator {
         responsive: true,
         maintainAspectRatio: true,
         scales: {
-          y: { min: 0, max: 100 }
+          y: {
+            min: ${scoreAxisRange.min},
+            max: ${scoreAxisRange.max}
+          }
         }
       }
     });
@@ -1156,8 +1166,8 @@ class HtmlDashboardGenerator {
             type: 'linear',
             display: true,
             position: 'right',
-            min: -10,
-            max: 35,
+            min: ${tempAxisRange.min},
+            max: ${tempAxisRange.max},
             title: { display: true, text: '気温（℃）' },
             grid: { drawOnChartArea: false }
           }
@@ -1207,8 +1217,8 @@ class HtmlDashboardGenerator {
             type: 'linear',
             display: true,
             position: 'right',
-            min: 0,
-            max: 20,
+            min: ${tempDiffAxisRange.min},
+            max: ${tempDiffAxisRange.max},
             title: { display: true, text: '気温差（℃）' },
             grid: { drawOnChartArea: false }
           }
@@ -1258,8 +1268,8 @@ class HtmlDashboardGenerator {
             type: 'linear',
             display: true,
             position: 'right',
-            min: 0,
-            max: 100,
+            min: ${humidityAxisRange.min},
+            max: ${humidityAxisRange.max},
             title: { display: true, text: '湿度（%）' },
             grid: { drawOnChartArea: false }
           }
@@ -1309,8 +1319,8 @@ class HtmlDashboardGenerator {
             type: 'linear',
             display: true,
             position: 'right',
-            min: 0,
-            max: 100,
+            min: ${cloudAxisRange.min},
+            max: ${cloudAxisRange.max},
             title: { display: true, text: '雲量（%）' },
             grid: { drawOnChartArea: false }
           }
@@ -1341,6 +1351,50 @@ class HtmlDashboardGenerator {
 </html>`;
 
     return html;
+  }
+
+  /**
+   * 総合スコア用の Y軸範囲を計算（下限50、または10刻みで調整）
+   */
+  calculateScoreAxisRange(scores) {
+    const minScore = Math.min(...scores);
+    const maxScore = Math.max(...scores);
+
+    let minAxis = 50;
+    let maxAxis = 100;
+
+    // すべてが50以上100未満の場合は50-100のまま
+    if (minScore >= 50 && maxScore < 100) {
+      return { min: 50, max: 100 };
+    }
+
+    // 50未満のデータがある場合は、10刻みで下限を調整
+    if (minScore < 50) {
+      minAxis = Math.floor(minScore / 10) * 10;
+    }
+
+    // 100を超えるデータがある場合は上限を調整
+    if (maxScore > 100) {
+      maxAxis = Math.ceil(maxScore / 10) * 10;
+    }
+
+    return { min: minAxis, max: Math.max(maxAxis, 100) };
+  }
+
+  /**
+   * 実データ用の Y軸範囲を計算（5刻みで自動調整）
+   */
+  calculateDataAxisRange(values) {
+    const minValue = Math.min(...values);
+    const maxValue = Math.max(...values);
+
+    // 下限を5刻みで計算
+    const minAxis = Math.floor(minValue / 5) * 5;
+
+    // 上限を5刻みで計算
+    const maxAxis = Math.ceil(maxValue / 5) * 5;
+
+    return { min: minAxis, max: maxAxis };
   }
 }
 
