@@ -55,12 +55,18 @@ class ReportGenerator {
 
     report += '\n';
 
+    // スコア算出根拠
+    report += '📐 スコア算出根拠:\n';
+    report += '─────────────────────\n';
+    report += this.getScoreReasoning(result.factorScores, weatherData, detailedAnalysis) + '\n';
+
     // 気象情報
     report += '🌤️  気象情報:\n';
     report += '─────────────────────\n';
     report += `気温: ${weatherData.temperature}℃ (体感: ${weatherData.feelsLike}℃)\n`;
     report += `湿度: ${weatherData.humidity}%\n`;
     report += `気圧: ${weatherData.pressure} hPa\n`;
+    report += `雲量: ${weatherData.cloudiness}%\n`;
     report += `天気: ${weatherData.weatherDescription}\n\n`;
 
     // 詳細分析
@@ -124,6 +130,107 @@ class ReportGenerator {
     const filledLength = Math.round((score / 100) * barLength);
     const emptyLength = barLength - filledLength;
     return '[' + '█'.repeat(filledLength) + '░'.repeat(emptyLength) + ']';
+  }
+
+  /**
+   * スコア算出根拠を取得
+   */
+  getScoreReasoning(factorScores, weatherData, detailedAnalysis) {
+    const reasoning = [];
+
+    // 気温の根拠
+    const tempScore = Math.round(factorScores.temperature);
+    if (tempScore === 100) {
+      reasoning.push(`• 気温: ${weatherData.temperature}℃は最適範囲(5-10℃)内のため100点`);
+    } else if (tempScore >= 70) {
+      const tempMsg = weatherData.temperature < 5
+        ? `${weatherData.temperature}℃は寒冷だが快適範囲(5-20℃)内`
+        : `${weatherData.temperature}℃は快適範囲(5-20℃)内`;
+      reasoning.push(`• 気温: ${tempMsg}のため${tempScore}点`);
+    } else {
+      const tempMsg = weatherData.temperature < 5
+        ? `${weatherData.temperature}℃は非常に寒い`
+        : `${weatherData.temperature}℃は高温`;
+      reasoning.push(`• 気温: ${tempMsg}のため${tempScore}点`);
+    }
+
+    // 気温差の根拠
+    const tempDiffScore = Math.round(factorScores.temperatureDifference);
+    if (tempDiffScore === 100) {
+      reasoning.push(`• 気温差: 日中の気温差が安定(≤10℃)しているため100点`);
+    } else {
+      // 気温差を推定（逆計算）: penalty = (diff - 10) * 3
+      // score = 100 - penalty → penalty = 100 - score
+      const penalty = 100 - tempDiffScore;
+      const estimatedDiff = (penalty / 3) + 10;
+      reasoning.push(`• 気温差: 日中の気温差が${Math.round(estimatedDiff)}℃程度あるため${tempDiffScore}点`);
+    }
+
+    // 湿度の根拠
+    const humidityScore = Math.round(factorScores.humidity);
+    if (humidityScore === 100) {
+      reasoning.push(`• 湿度: ${weatherData.humidity}%は最適範囲(40-60%)内のため100点`);
+    } else if (humidityScore >= 70) {
+      reasoning.push(`• 湿度: ${weatherData.humidity}%はやや不快だが許容範囲のため${humidityScore}点`);
+    } else {
+      const humidityMsg = weatherData.humidity < 40
+        ? `${weatherData.humidity}%は乾燥`
+        : `${weatherData.humidity}%は高湿度`;
+      reasoning.push(`• 湿度: ${humidityMsg}のため${humidityScore}点`);
+    }
+
+    // 日照の根拠
+    const illuminationScore = Math.round(factorScores.illumination);
+    const cloudiness = weatherData.cloudiness;
+    let cloudDesc = '';
+    if (cloudiness <= 20) {
+      cloudDesc = '快晴';
+    } else if (cloudiness <= 40) {
+      cloudDesc = '晴れ';
+    } else if (cloudiness <= 60) {
+      cloudDesc = '曇り';
+    } else if (cloudiness <= 80) {
+      cloudDesc = '曇天';
+    } else {
+      cloudDesc = '厚い雲';
+    }
+    reasoning.push(`• 日照: 雲量${cloudiness}%で${cloudDesc}のため${illuminationScore}点`);
+
+    // 空気質の根拠
+    const airQualityScore = Math.round(factorScores.airQuality);
+    if (airQualityScore === 100) {
+      reasoning.push(`• 空気質: 屋内のみの予定のため影響なし、100点`);
+    } else {
+      reasoning.push(`• 空気質: AQI指数に基づき${airQualityScore}点`);
+    }
+
+    // 気圧の根拠
+    const pressureScore = Math.round(factorScores.pressure);
+    if (pressureScore === 100) {
+      reasoning.push(`• 気圧: ${weatherData.pressure} hPaは最適範囲(1010-1015 hPa)のため100点`);
+    } else if (pressureScore >= 80) {
+      reasoning.push(`• 気圧: ${weatherData.pressure} hPaは許容範囲(990-1030 hPa)のため${pressureScore}点`);
+    } else {
+      const pressureMsg = weatherData.pressure < 990
+        ? `${weatherData.pressure} hPaは低気圧`
+        : `${weatherData.pressure} hPaは高気圧`;
+      reasoning.push(`• 気圧: ${pressureMsg}のため${pressureScore}点`);
+    }
+
+    // スケジュールの根拠
+    const scheduleScore = Math.round(factorScores.schedule);
+    if (scheduleScore === 100) {
+      reasoning.push(`• スケジュール: 特に負担となる予定がないため100点`);
+    } else {
+      const issues = [];
+      if (detailedAnalysis.some(a => a.factor === 'スケジュール')) {
+        const scheduleRisk = detailedAnalysis.find(a => a.factor === 'スケジュール');
+        issues.push(scheduleRisk.issue);
+      }
+      reasoning.push(`• スケジュール: ${issues.length > 0 ? issues[0] : 'スケジュール負荷あり'}のため${scheduleScore}点`);
+    }
+
+    return reasoning.join('\n');
   }
 
   /**
