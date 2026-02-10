@@ -1,19 +1,31 @@
 @echo off
-REM 体調予報システム実行バッチファイル
+REM 体調予報を実行するバッチファイル
+REM このファイルをダブルクリックして実行してください
+REM エンコーディング: Shift-JIS
+
+cd /d "C:\Users\user\claude\Projects\Condition_Forecast"
 
 echo.
-echo 体調予報システムを起動しています...
+echo ========================================
+echo    体調予報システムを起動しています
+echo ========================================
 echo.
 
-cd /d "c:\Users\user\claude\Projects\Condition_Forecast"
-
-REM npm start 実行
 npm start
 
-REM ダッシュボードをブラウザで開く
-if exist dashboard.html (
+if %ERRORLEVEL% NEQ 0 (
     echo.
-    echo ダッシュボードをブラウザで開いています...
+    echo エラーが発生しました
+    echo エラーコード: %ERRORLEVEL%
+    echo.
+)
+
+echo.
+echo 完了しました
+echo.
+
+if exist dashboard.html (
+    echo ダッシュボードをブラウザで開きます...
     start "" dashboard.html
 )
 

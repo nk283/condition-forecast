@@ -1,6 +1,7 @@
 @echo off
 REM Windows Task Scheduler 自動実行設定バッチファイル
 REM 注意: このファイルを『管理者として実行』してください
+REM エンコーディング: Shift-JIS
 
 echo.
 echo ========================================
@@ -35,7 +36,7 @@ schtasks /create /tn "体調予報システム_毎日実行" ^
 
 if %ERRORLEVEL% EQU 0 (
     echo.
-    echo ✓ Task Scheduler に登録されました
+    echo Task Scheduler に登録されました
     echo.
     echo タスク名: 体調予報システム_毎日実行
     echo 実行時間: 毎日 朝8時
