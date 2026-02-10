@@ -102,6 +102,166 @@ class WeatherService {
   }
 
   /**
+   * 72時間（昨日24h + 今日24h + 明日24h）の1時間刻みデータを取得
+   * 3時間間隔の予報データから線形補間で1時間刻みデータを生成
+   */
+  async getHourlyForecast72h() {
+    try {
+      const forecast3h = await this.getForecast();
+
+      // 現在時刻から-24h ～ +48h の範囲を計算
+      const now = new Date();
+      const startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 昨日
+      const endTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);   // 明後日
+
+      const hourlyData = [];
+
+      // 1時間刻みの配列を生成（72時間分）
+      for (let i = 0; i < 72; i++) {
+        const targetTime = new Date(startTime.getTime() + i * 60 * 60 * 1000);
+        const interpolatedData = this.interpolateWeatherData(forecast3h, targetTime);
+
+        hourlyData.push({
+          timestamp: targetTime.toISOString(),
+          hour: targetTime.getHours(),
+          date: targetTime.toLocaleDateString('ja-JP'),
+          dateObj: targetTime,
+          ...interpolatedData
+        });
+      }
+
+      console.log(`✅ 72時間の1時間刻みデータを生成しました (${hourlyData.length}件)`);
+      return hourlyData;
+    } catch (error) {
+      console.error('72時間データ取得エラー:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 3時間データから1時間データへの線形補間
+   */
+  interpolateWeatherData(forecast3h, targetTime) {
+    // targetTime の前後の3時間データを取得
+    const before = this.findClosestBefore(forecast3h, targetTime);
+    const after = this.findClosestAfter(forecast3h, targetTime);
+
+    if (!before || !after) {
+      // 範囲外の場合: 最も近いデータを使用
+      return this.useClosestData(forecast3h, targetTime);
+    }
+
+    // 線形補間比率を計算
+    const beforeTime = before.timestamp.getTime() / 1000;
+    const afterTime = after.timestamp.getTime() / 1000;
+    const targetTimeUnix = targetTime.getTime() / 1000;
+
+    const totalDiff = afterTime - beforeTime; // 秒単位
+    const targetDiff = targetTimeUnix - beforeTime;
+    const ratio = targetDiff / totalDiff; // 0.0 ～ 1.0
+
+    // 各要因を補間
+    return {
+      temperature: this.lerp(before.temperature, after.temperature, ratio),
+      humidity: this.lerp(before.humidity, after.humidity, ratio),
+      pressure: this.lerp(before.pressure, after.pressure, ratio),
+      cloudiness: before.cloudiness, // 雲量はStep補間（変化が急なため）
+      windSpeed: this.lerp(before.windSpeed, after.windSpeed, ratio),
+      feelsLike: this.lerp(before.feelsLike, after.feelsLike, ratio),
+      visibility: this.lerp(before.visibility, after.visibility, ratio),
+      rainVolume: before.rainVolume, // 降雨量もStep補間
+      weatherMain: before.weatherMain,
+      weatherDescription: before.weatherDescription,
+      weatherIcon: before.weatherIcon
+    };
+  }
+
+  /**
+   * 線形補間ヘルパー関数
+   * v0: 開始値、v1: 終了値、t: 補間比率（0.0-1.0）
+   */
+  lerp(v0, v1, t) {
+    return v0 * (1 - t) + v1 * t;
+  }
+
+  /**
+   * targetTime より前で最も近いデータを検索
+   */
+  findClosestBefore(forecastList, targetTime) {
+    const targetUnix = targetTime.getTime() / 1000;
+    let closest = null;
+    let maxDiff = Infinity;
+
+    for (const item of forecastList) {
+      const itemUnix = item.timestamp.getTime() / 1000;
+      if (itemUnix <= targetUnix) {
+        const diff = targetUnix - itemUnix;
+        if (diff < maxDiff) {
+          maxDiff = diff;
+          closest = item;
+        }
+      }
+    }
+
+    return closest;
+  }
+
+  /**
+   * targetTime より後で最も近いデータを検索
+   */
+  findClosestAfter(forecastList, targetTime) {
+    const targetUnix = targetTime.getTime() / 1000;
+    let closest = null;
+    let minDiff = Infinity;
+
+    for (const item of forecastList) {
+      const itemUnix = item.timestamp.getTime() / 1000;
+      if (itemUnix >= targetUnix) {
+        const diff = itemUnix - targetUnix;
+        if (diff < minDiff) {
+          minDiff = diff;
+          closest = item;
+        }
+      }
+    }
+
+    return closest;
+  }
+
+  /**
+   * 範囲外のデータに対して最も近いデータを使用
+   */
+  useClosestData(forecastList, targetTime) {
+    const targetUnix = targetTime.getTime() / 1000;
+    let closest = null;
+    let minDiff = Infinity;
+
+    for (const item of forecastList) {
+      const itemUnix = item.timestamp.getTime() / 1000;
+      const diff = Math.abs(itemUnix - targetUnix);
+      if (diff < minDiff) {
+        minDiff = diff;
+        closest = item;
+      }
+    }
+
+    // closest から新規オブジェクトを返す
+    return closest ? {
+      temperature: closest.temperature,
+      humidity: closest.humidity,
+      pressure: closest.pressure,
+      cloudiness: closest.cloudiness,
+      windSpeed: closest.windSpeed,
+      feelsLike: closest.feelsLike,
+      visibility: closest.visibility,
+      rainVolume: closest.rainVolume,
+      weatherMain: closest.weatherMain,
+      weatherDescription: closest.weatherDescription,
+      weatherIcon: closest.weatherIcon
+    } : null;
+  }
+
+  /**
    * 予報リストを1日ごとに集約する
    * 各日の最高気温、最低気温、平均雲量、平均湿度、平均気圧を計算
    */

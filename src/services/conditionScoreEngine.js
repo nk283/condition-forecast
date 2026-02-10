@@ -5,13 +5,13 @@
 class ConditionScoreEngine {
   constructor() {
     this.weights = {
-      temperature: 0.20,
-      temperatureDifference: 0.05,
+      temperature: 0.15,
+      temperatureDiff12h: 0.10,  // 新規: 過去12時間の気温差
       humidity: 0.15,
-      illumination: 0.20,
-      airQuality: 0.15,
+      illumination: 0.15,
+      airQuality: 0.10,
       pressure: 0.10,
-      schedule: 0.15
+      schedule: 0.25  // 時間別対応で重要度UP
     };
   }
 
@@ -269,6 +269,148 @@ class ConditionScoreEngine {
         advice: '体調が悪いです。休息を優先してください。'
       };
     }
+  }
+
+  /**
+   * 72時間の1時間刻みスコアを計算
+   * @param {Array} hourlyData - WeatherService.getHourlyForecast72h()の結果
+   * @param {Array} scheduleData - Google Calendar の予定配列（オプション）
+   */
+  calculateHourlyScores(hourlyData, scheduleData = []) {
+    const results = [];
+
+    for (let i = 0; i < hourlyData.length; i++) {
+      const data = hourlyData[i];
+
+      // 過去12時間の気温データを取得（ i-12 ～ i-1）
+      const past12hStart = Math.max(0, i - 12);
+      const past12h = hourlyData.slice(past12hStart, i + 1);
+      const tempDiff12h = this.calculateTempDiff12h(past12h);
+
+      // 各要因のスコア計算
+      const scores = {
+        temperature: this.calculateTemperatureScore(data.temperature),
+        temperatureDiff12h: this.calculateTempDiffScore(tempDiff12h),
+        humidity: this.calculateHumidityScore(data.humidity, data.temperature),
+        illumination: this.calculateSunshineScoreHourly(data.cloudiness, data.hour),
+        airQuality: 50, // 暫定値（将来WAQI API統合）
+        pressure: this.calculatePressureScore(data.pressure),
+        schedule: this.calculateScheduleScoreHourly(data.timestamp, scheduleData)
+      };
+
+      // 総合スコア計算（新しい重み配分）
+      const totalScore =
+        scores.temperature * this.weights.temperature +
+        scores.temperatureDiff12h * this.weights.temperatureDiff12h +
+        scores.humidity * this.weights.humidity +
+        scores.illumination * this.weights.illumination +
+        scores.airQuality * this.weights.airQuality +
+        scores.pressure * this.weights.pressure +
+        scores.schedule * this.weights.schedule;
+
+      results.push({
+        timestamp: data.timestamp,
+        hour: data.hour,
+        date: data.date,
+        totalScore: Math.round(totalScore),
+        factorScores: scores,
+        weatherData: {
+          temperature: data.temperature,
+          humidity: data.humidity,
+          pressure: data.pressure,
+          cloudiness: data.cloudiness,
+          windSpeed: data.windSpeed,
+          weatherDescription: data.weatherDescription
+        },
+        tempDiff12h: Math.round(tempDiff12h * 10) / 10
+      });
+    }
+
+    return results;
+  }
+
+  /**
+   * 過去12時間の気温差を計算
+   */
+  calculateTempDiff12h(past12hData) {
+    if (past12hData.length === 0) return 0;
+
+    const temps = past12hData.map(d => d.temperature);
+    const maxTemp = Math.max(...temps);
+    const minTemp = Math.min(...temps);
+
+    return maxTemp - minTemp;
+  }
+
+  /**
+   * 気温差スコア（過去12時間の気温差が5℃以上で減点）
+   */
+  calculateTempDiffScore(tempDiff12h) {
+    // 5℃以内: 100点（問題なし）
+    if (tempDiff12h <= 5) {
+      return 100;
+    }
+
+    // 5℃超過: 1℃あたり10点減点
+    const penalty = (tempDiff12h - 5) * 10;
+    const score = 100 - penalty;
+
+    return Math.max(0, score); // 最低0点
+  }
+
+  /**
+   * 日照スコア（日没後対応版）
+   * 日中（6:00-18:00）のみ、日没後は中立値を返す
+   */
+  calculateSunshineScoreHourly(cloudCoverage, hour) {
+    const sunrise = 6;
+    const sunset = 18;
+
+    // 日中（6:00-18:00）以外は夜間扱い
+    if (hour < sunrise || hour >= sunset) {
+      return 70; // 夜間は日照の影響なし（中立値）
+    }
+
+    // 日中は雲量ベースでスコア計算
+    if (cloudCoverage <= 20) return 100; // 快晴
+    if (cloudCoverage <= 40) return 90;  // 晴れ
+    if (cloudCoverage <= 60) return 70;  // 曇り
+    if (cloudCoverage <= 80) return 50;  // 曇天
+    return 40;                            // 厚い雲
+  }
+
+  /**
+   * スケジュールスコア（時間別版）
+   * 該当時刻に予定があれば0点、なければ100点
+   */
+  calculateScheduleScoreHourly(timestamp, scheduleData) {
+    // scheduleData の形式: [{ start: '2026-02-10T09:00:00Z', end: '...' }]
+    if (!scheduleData || scheduleData.length === 0) {
+      return 100; // 予定がない場合は100点
+    }
+
+    const targetTime = new Date(timestamp);
+
+    // 該当時刻に予定があるか確認
+    const hasEvent = scheduleData.some(event => {
+      let start, end;
+
+      // start/end が ISO文字列の場合
+      if (typeof event.start === 'string') {
+        start = new Date(event.start);
+        end = new Date(event.end);
+      } else if (event.start instanceof Date) {
+        start = event.start;
+        end = event.end;
+      } else {
+        return false;
+      }
+
+      // 対象時間が予定の時間帯に含まれるか確認
+      return targetTime >= start && targetTime < end;
+    });
+
+    return hasEvent ? 0 : 100; // 予定あり=0点、なし=100点
   }
 
   /**

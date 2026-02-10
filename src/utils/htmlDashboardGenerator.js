@@ -805,6 +805,359 @@ class HtmlDashboardGenerator {
     };
     return labels[type] || labels['undefined'];
   }
+
+  /**
+   * 72時間の1時間刻みダッシュボードを生成
+   */
+  generateHourlyDashboard(hourlyScores) {
+    const html = this.generateHourlyHtml(hourlyScores);
+    const outputPath = 'dashboard_72h.html';
+    fs.writeFileSync(outputPath, html);
+    return outputPath;
+  }
+
+  /**
+   * 72時間HTML を生成
+   */
+  generateHourlyHtml(hourlyScores) {
+    if (!hourlyScores || hourlyScores.length === 0) {
+      return '<html><body>No data available</body></html>';
+    }
+
+    // グラフ用データ準備
+    const labels = hourlyScores.map(s => {
+      const date = new Date(s.timestamp);
+      return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
+    });
+
+    const totalScores = hourlyScores.map(s => s.totalScore);
+    const tempScores = hourlyScores.map(s => s.factorScores.temperature);
+    const tempDiffScores = hourlyScores.map(s => s.factorScores.temperatureDiff12h);
+    const illuminationScores = hourlyScores.map(s => s.factorScores.illumination);
+    const scheduleScores = hourlyScores.map(s => s.factorScores.schedule);
+
+    // テーブルHTMLを生成
+    let tableHtml = '<table class="hourly-table"><thead><tr>';
+    tableHtml += '<th>時刻</th><th>総合</th><th>気温</th><th>気温差12h</th>';
+    tableHtml += '<th>湿度</th><th>日照</th><th>気圧</th><th>空気質</th><th>予定</th>';
+    tableHtml += '</tr></thead><tbody>';
+
+    hourlyScores.forEach(score => {
+      const date = new Date(score.timestamp);
+      const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
+      const color = this.getScoreColor(score.totalScore);
+
+      tableHtml += `<tr>
+        <td>${timeStr}</td>
+        <td style="background-color: ${color}; color: white; font-weight: bold;">${score.totalScore}</td>
+        <td>${Math.round(score.factorScores.temperature)}</td>
+        <td>${Math.round(score.factorScores.temperatureDiff12h)}</td>
+        <td>${Math.round(score.factorScores.humidity)}</td>
+        <td>${Math.round(score.factorScores.illumination)}</td>
+        <td>${Math.round(score.factorScores.pressure)}</td>
+        <td>${Math.round(score.factorScores.airQuality)}</td>
+        <td>${score.factorScores.schedule === 0 ? '📅' : '✓'}</td>
+      </tr>`;
+    });
+
+    tableHtml += '</tbody></table>';
+
+    const html = `<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>体調予報 - 72時間詳細分析</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: white;
+      border-radius: 10px;
+      padding: 20px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      margin-bottom: 20px;
+    }
+
+    .card h2 {
+      margin-bottom: 15px;
+      color: #333;
+    }
+
+    canvas {
+      max-height: 300px;
+    }
+
+    .hourly-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.85em;
+      margin-top: 10px;
+    }
+
+    .hourly-table th,
+    .hourly-table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: center;
+    }
+
+    .hourly-table th {
+      background-color: #667eea;
+      color: white;
+      font-weight: bold;
+    }
+
+    .hourly-table tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .hourly-table tr:hover {
+      background-color: #f0f0f0;
+    }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    @media (max-width: 1000px) {
+      .grid-2 {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .legend {
+      display: flex;
+      gap: 20px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-color {
+      width: 20px;
+      height: 20px;
+      border-radius: 3px;
+    }
+
+    .note {
+      background-color: #fff9c4;
+      border-left: 4px solid #fbc02d;
+      padding: 10px;
+      margin-top: 10px;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌤️ 72時間体調予報 - 詳細分析</h1>
+      <p>1時間刻みで体調スコアを表示します</p>
+    </header>
+
+    <div class="card">
+      <h2>📊 総合スコア推移（72時間）</h2>
+      <canvas id="totalScoreChart"></canvas>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-color" style="background-color: rgb(76, 175, 80);"></div>良好 (80-100)</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: rgb(255, 193, 7);"></div>注意 (60-79)</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: rgb(255, 152, 0);"></div>要注意 (40-59)</div>
+        <div class="legend-item"><div class="legend-color" style="background-color: rgb(244, 67, 54);"></div>警告 (0-39)</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>🌡️ 気温スコア推移</h2>
+        <canvas id="temperatureChart"></canvas>
+      </div>
+
+      <div class="card">
+        <h2>💨 気温差（12h）スコア推移</h2>
+        <canvas id="tempDiffChart"></canvas>
+        <div class="note">⚠️ 過去12時間の気温差が5℃超過で減点</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>☀️ 日照スコア推移</h2>
+        <canvas id="illuminationChart"></canvas>
+        <div class="note">💡 日没後（18:00以降）は中立値（70点）</div>
+      </div>
+
+      <div class="card">
+        <h2>📅 予定スコア推移</h2>
+        <canvas id="scheduleChart"></canvas>
+        <div class="note">📍 予定あり=0点、なし=100点</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>📈 時間別詳細スコア表</h2>
+      <div class="note">表をスクロールして詳細をご確認ください</div>
+      ${tableHtml}
+    </div>
+  </div>
+
+  <script>
+    // 総合スコアグラフ
+    new Chart(document.getElementById('totalScoreChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [{
+          label: '総合スコア',
+          data: ${JSON.stringify(totalScores)},
+          borderColor: 'rgb(102, 126, 234)',
+          backgroundColor: 'rgba(102, 126, 234, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointRadius: 2,
+          pointBackgroundColor: function(context) {
+            const value = context.parsed.y;
+            if (value >= 80) return 'rgb(76, 175, 80)';
+            if (value >= 60) return 'rgb(255, 193, 7)';
+            if (value >= 40) return 'rgb(255, 152, 0)';
+            return 'rgb(244, 67, 54)';
+          }
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: true,
+        scales: {
+          y: { min: 0, max: 100 }
+        }
+      }
+    });
+
+    // 気温スコアグラフ
+    new Chart(document.getElementById('temperatureChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [{
+          label: '気温スコア',
+          data: ${JSON.stringify(tempScores)},
+          borderColor: 'rgb(255, 152, 0)',
+          backgroundColor: 'rgba(255, 152, 0, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0, max: 100 } }
+      }
+    });
+
+    // 気温差スコアグラフ
+    new Chart(document.getElementById('tempDiffChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [{
+          label: '気温差スコア（5℃超過で減点）',
+          data: ${JSON.stringify(tempDiffScores)},
+          borderColor: 'rgb(244, 67, 54)',
+          backgroundColor: 'rgba(244, 67, 54, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0, max: 100 } }
+      }
+    });
+
+    // 日照スコアグラフ
+    new Chart(document.getElementById('illuminationChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [{
+          label: '日照スコア（日没後は中立値）',
+          data: ${JSON.stringify(illuminationScores)},
+          borderColor: 'rgb(255, 193, 7)',
+          backgroundColor: 'rgba(255, 193, 7, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0, max: 100 } }
+      }
+    });
+
+    // 予定スコアグラフ
+    new Chart(document.getElementById('scheduleChart'), {
+      type: 'bar',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [{
+          label: '予定スコア（予定あり=0, なし=100）',
+          data: ${JSON.stringify(scheduleScores)},
+          backgroundColor: function(context) {
+            return context.parsed.y === 0 ? 'rgba(244, 67, 54, 0.7)' : 'rgba(76, 175, 80, 0.7)';
+          }
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0, max: 100 } }
+      }
+    });
+  </script>
+</body>
+</html>`;
+
+    return html;
+  }
 }
 
 module.exports = HtmlDashboardGenerator;

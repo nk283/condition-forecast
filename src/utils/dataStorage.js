@@ -5,8 +5,9 @@ const path = require('path');
  * 体調スコアの過去データ管理
  */
 class DataStorage {
-  constructor(storagePath = 'data/scores.json') {
+  constructor(storagePath = 'data/scores.json', hourlyStoragePath = 'data/hourly_scores.json') {
     this.storagePath = storagePath;
+    this.hourlyStoragePath = hourlyStoragePath;
     this.storageDir = path.dirname(storagePath);
     this.ensureStorageDir();
   }
@@ -247,6 +248,104 @@ class DataStorage {
       return 'down';
     } else {
       return 'stable';
+    }
+  }
+
+  /**
+   * 時間別スコアを保存（72時間の1時間刻みデータ用）
+   * @param {Array} hourlyScores - ConditionScoreEngine.calculateHourlyScores()の結果
+   */
+  saveHourlyScores(hourlyScores) {
+    try {
+      const filePath = path.join(this.storageDir, path.basename(this.hourlyStoragePath));
+
+      // 既存データを読み込み
+      let allData = [];
+      if (fs.existsSync(filePath)) {
+        const content = fs.readFileSync(filePath, 'utf8');
+        allData = JSON.parse(content);
+      }
+
+      // 新しいデータを追加（重複チェック）
+      hourlyScores.forEach(score => {
+        const exists = allData.find(d => d.timestamp === score.timestamp);
+        if (!exists) {
+          // スコアを保存可能な形式に変換
+          allData.push({
+            timestamp: score.timestamp,
+            hour: score.hour,
+            date: score.date,
+            totalScore: Math.round(score.totalScore),
+            factorScores: {
+              temperature: Math.round(score.factorScores.temperature),
+              temperatureDiff12h: Math.round(score.factorScores.temperatureDiff12h),
+              humidity: Math.round(score.factorScores.humidity),
+              illumination: Math.round(score.factorScores.illumination),
+              airQuality: Math.round(score.factorScores.airQuality),
+              pressure: Math.round(score.factorScores.pressure),
+              schedule: Math.round(score.factorScores.schedule)
+            },
+            weatherData: score.weatherData,
+            tempDiff12h: score.tempDiff12h
+          });
+        }
+      });
+
+      // 古いデータを削除（30日以上前）
+      const cutoffDate = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+      allData = allData.filter(d => new Date(d.timestamp) > cutoffDate);
+
+      // ファイルに保存
+      fs.writeFileSync(filePath, JSON.stringify(allData, null, 2), 'utf8');
+      console.log(`✅ 時間別スコア保存: ${allData.length}件`);
+      return true;
+    } catch (error) {
+      console.error('時間別スコア保存エラー:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * 指定期間の時間別スコアを取得
+   */
+  getHourlyScores(startTime, endTime) {
+    try {
+      const filePath = path.join(this.storageDir, path.basename(this.hourlyStoragePath));
+
+      if (!fs.existsSync(filePath)) {
+        return [];
+      }
+
+      const content = fs.readFileSync(filePath, 'utf8');
+      const allData = JSON.parse(content);
+
+      // 指定期間のデータを抽出
+      return allData.filter(d => {
+        const timestamp = new Date(d.timestamp);
+        return timestamp >= startTime && timestamp <= endTime;
+      });
+    } catch (error) {
+      console.warn('時間別スコア取得エラー:', error.message);
+      return [];
+    }
+  }
+
+  /**
+   * 昨日24時間分のスコアを取得（過去データから）
+   */
+  getYesterdayScores() {
+    try {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      yesterday.setHours(0, 0, 0, 0);
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
+      return this.getHourlyScores(yesterday, today);
+    } catch (error) {
+      console.warn('昨日のスコア取得エラー:', error.message);
+      return [];
     }
   }
 }

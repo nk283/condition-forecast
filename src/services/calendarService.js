@@ -168,6 +168,55 @@ class CalendarService {
   }
 
   /**
+   * 72時間（昨日24h + 今日24h + 明日24h）の予定を取得
+   * 時刻情報を保持したまま返す（1時間単位のスコア計算用）
+   */
+  async getScheduleFor72h() {
+    try {
+      const now = new Date();
+      const startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 昨日
+      const endTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);   // 明後日
+
+      const events = await this.getEvents(startTime, endTime);
+
+      // 時刻情報を保持したまま返す
+      return events
+        .filter(event => event.start && event.end) // 無効なイベントを除外
+        .map(event => ({
+          summary: event.summary,
+          start: event.start.dateTime || event.start.date,
+          end: event.end.dateTime || event.end.date,
+          type: this.classifyEventType(event.summary, event.description || '')
+        }));
+    } catch (error) {
+      console.warn('72時間予定取得エラー:', error.message);
+      return []; // エラー時は空配列を返す
+    }
+  }
+
+  /**
+   * イベント種別を分類（内部ヘルパー）
+   */
+  classifyEventType(summary, description) {
+    const text = (summary + description).toLowerCase();
+
+    if (text.includes('会') || text.includes('meeting') || text.includes('打ち合わせ')) {
+      return 'meeting';
+    }
+    if (text.includes('外出') || text.includes('outdoor') || text.includes('出張')) {
+      return 'outdoor';
+    }
+    if (text.includes('寝') || text.includes('睡眠') || text.includes('sleep')) {
+      return 'sleep';
+    }
+    if (text.includes('食') || text.includes('meal') || text.includes('食事')) {
+      return 'meal';
+    }
+
+    return 'other';
+  }
+
+  /**
    * 予定の詳細情報を解析
    */
   analyzeSchedule(events) {

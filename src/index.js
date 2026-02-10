@@ -8,10 +8,11 @@ const HtmlDashboardGenerator = require('./utils/htmlDashboardGenerator');
 
 /**
  * メイン体調予報関数
+ * 72時間（昨日24h + 今日24h + 明日24h）の1時間刻みスコアを計算
  */
 async function forecastCondition() {
   try {
-    console.log('🌡️  体調予報システムを起動しています...\n');
+    console.log('🌤️  体調予報システムを起動しています（72時間モード）...\n');
 
     // サービスを初期化
     const weatherService = new WeatherService(
@@ -31,87 +32,70 @@ async function forecastCondition() {
     const htmlGenerator = new HtmlDashboardGenerator();
 
     // データを収集
-    console.log('📊 データを収集しています...');
-    const weatherData = await weatherService.getCurrentWeather();
-    console.log('✓ 気象データを取得');
+    console.log('📊 データを収集しています（72時間分）...');
 
-    // カレンダーデータを取得
-    const today = new Date();
-    let scheduleAnalysis = {
-      hasEvents: false,
-      eventCount: 0,
-      hasMeetings: false,
-      hasOutdoorActivities: false,
-      sleepInterruption: false,
-      mealInterruption: false,
-      events: []
-    };
+    // 現在時刻
+    const now = new Date();
 
-    // Google Calendar 認証確認
+    // 1. 72時間の1時間刻み天気データを取得
+    console.log('⏳ 72時間の天気データを取得中...');
+    const hourly72h = await weatherService.getHourlyForecast72h();
+    console.log(`✓ 72時間の天気データを取得 (${hourly72h.length}時間分)`);
+
+    // 2. Google Calendar の72時間予定を取得
+    let scheduleData = [];
     if (calendarService.isAuthenticated()) {
       try {
-        const calendarEvents = await calendarService.getEventsForDate(today);
-        scheduleAnalysis = calendarService.analyzeSchedule(calendarEvents);
-        console.log('✓ カレンダーデータを取得');
+        scheduleData = await calendarService.getScheduleFor72h();
+        console.log(`✓ 72時間の予定を取得 (${scheduleData.length}件)`);
       } catch (error) {
         console.warn('⚠️  カレンダーデータ取得エラー:', error.message);
-        console.warn('   サンプルデータを使用します');
+        console.warn('   予定なしで計算を続行します');
       }
     } else {
       console.warn('⚠️  Google Calendar 認証未完了');
-      console.warn('   Google Calendar 連携を有効化するには以下を実行:');
-      console.warn('   npm run auth');
-      console.warn('   サンプルデータを使用します');
+      console.warn('   Google Calendar 連携を有効化するには以下を実行: npm run auth');
+      console.warn('   予定なしで計算を続行します');
     }
 
-    // 体調スコアを計算
-    console.log('\n🧮 体調スコアを計算しています...');
+    // 3. 72時間の1時間刻みスコアを計算
+    console.log('\n🧮 72時間の体調スコアを計算しています...');
+    const hourlyScores = scoreEngine.calculateHourlyScores(hourly72h, scheduleData);
+    console.log(`✓ 72時間のスコアを計算 (${hourlyScores.length}時間分)`);
 
-    // 予報データから今日の最高・最低気温を取得
-    let forecastByDay = [];
-    let tempMax = weatherData.temperature;
-    let tempMin = weatherData.temperature;
+    // 4. 時間別スコアデータを保存
+    console.log('\n💾 時間別データを保存しています...');
+    dataStorage.saveHourlyScores(hourlyScores);
+    console.log('✓ 時間別スコアを保存');
 
-    try {
-      forecastByDay = await weatherService.getForecastByDay();
-      console.log('✓ 予報データを取得');
+    // 5. 今日のスコア（12時時点）を取得（レポート用）
+    const todayIndex = 24; // 昨日0:00 + 24 = 今日0:00, さらに+12=今日12:00
+    const todayNoonScore = hourlyScores[todayIndex + 12] || hourlyScores[todayIndex];
+    const todayWeather = todayNoonScore.weatherData;
 
-      // 今日のデータから最高・最低気温を抽出
-      const today_str = today.toISOString().split('T')[0];
-      const todayForecast = forecastByDay.find(f => f.date === today_str);
-      if (todayForecast) {
-        tempMax = todayForecast.tempMax;
-        tempMin = todayForecast.tempMin;
-      }
-    } catch (error) {
-      console.warn('⚠️  予報データ取得エラー:', error.message);
-      console.warn('   今日のスコアのみを計算します');
-    }
-
-    const conditionData = {
-      temperature: weatherData.temperature,
-      temperatureMax: tempMax,
-      temperatureMin: tempMin,
-      humidity: weatherData.humidity,
-      pressure: weatherData.pressure,
-      cloudCoverage: weatherData.cloudiness,
-      aqi: 50, // サンプル値（実際には空気質API から取得）
-      hasOutdoorPlans: scheduleAnalysis.hasOutdoorActivities,
-      scheduleAnalysis: scheduleAnalysis
-    };
-
-    const result = scoreEngine.calculateTotalScore(conditionData);
-    const detailedAnalysis = scoreEngine.getDetailedAnalysis(result.factorScores, conditionData);
-
-    // レポートを生成
+    // 6. レポート生成（互換性のため）
     console.log('\n📋 レポートを生成しています...');
     const reportGenerator = new ReportGenerator();
-    const report = reportGenerator.generateReport(result, detailedAnalysis, weatherData, today);
+    const todayConditionData = {
+      temperature: todayWeather.temperature,
+      humidity: todayWeather.humidity,
+      pressure: todayWeather.pressure,
+      cloudCoverage: todayWeather.cloudiness,
+      aqi: 50
+    };
+    const todayDetailedAnalysis = scoreEngine.getDetailedAnalysis(todayNoonScore.factorScores, todayConditionData);
+    const report = reportGenerator.generateReport(
+      { totalScore: todayNoonScore.totalScore, factorScores: todayNoonScore.factorScores, evaluation: scoreEngine.getEvaluation(todayNoonScore.totalScore) },
+      todayDetailedAnalysis,
+      todayWeather,
+      now
+    );
 
-    // 出力
+    // 7. 出力
     console.log('\n========================================');
-    console.log('         🌟 体調予報レポート 🌟');
+    console.log('         🌟 72時間体調予報レポート 🌟');
     console.log('========================================\n');
+    console.log('【本日（12:00時点）のスコア】\n');
     console.log(report.text);
 
     // JSON 出力
@@ -120,41 +104,12 @@ async function forecastCondition() {
       console.log(JSON.stringify(report.json, null, 2));
     }
 
-    // 過去データを保存
-    console.log('\n💾 データを保存しています...');
-    dataStorage.saveScore(today, result.totalScore, result.factorScores, weatherData, scheduleAnalysis);
-    console.log('✓ スコアを保存');
-
-    // 未来予報を計算・保存
-    let forecastScores = [];
-    if (forecastByDay.length > 0) {
-      console.log('\n🔮 未来5日間の体調予報を計算しています...');
-      forecastScores = scoreEngine.calculateMultiDayScores(forecastByDay);
-      console.log(`✓ 未来${forecastScores.length}日間の予測を計算`);
-
-      // 予測データを保存
-      forecastScores.forEach(fs => {
-        dataStorage.saveForecastScore(fs.date, fs.totalScore, fs.factorScores);
-      });
-      console.log('✓ 予測データを保存');
-    }
-
-    // HTML ダッシュボードを生成
+    // 8. HTML ダッシュボードを生成
     console.log('\n🎨 HTML ダッシュボードを生成しています...');
-    const historicalData = dataStorage.getRecentScores(7);
-    const forecastData = dataStorage.getForecastScores();
-    const dashboardPath = htmlGenerator.generateDashboard(
-      report,
-      weatherData,
-      scheduleAnalysis,
-      historicalData,
-      forecastData,
-      detailedAnalysis
-    );
+    const dashboardPath = htmlGenerator.generateHourlyDashboard(hourlyScores);
     console.log(`✓ ダッシュボード生成: ${dashboardPath}`);
-    console.log(`  ブラウザで開く: ${dashboardPath}`);
 
-    return report;
+    return { report, hourlyScores };
   } catch (error) {
     console.error('❌ エラーが発生しました:', error.message);
     process.exit(1);
