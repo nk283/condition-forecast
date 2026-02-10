@@ -69,11 +69,15 @@ async function forecastCondition() {
     console.log('✓ 時間別スコアを保存');
 
     // 5. 現在時刻のスコアを取得（レポート用）
-    // 開始時刻が「本日00:00」なので、インデックス = 現在時刻（時間単位）
+    // 開始時刻が「昨日00:00」なので、インデックス = 24（今日分）+ 現在時刻（時間単位）
     const currentHour = now.getHours();
-    const currentIndex = Math.max(0, Math.min(71, currentHour)); // 0-71の範囲
-    const currentScore = hourlyScores[currentIndex] || hourlyScores[0];
-    const currentWeather = currentScore.weatherData || {};
+    const currentIndex = 24 + currentHour; // 昨日24時間 + 今日の現在時刻
+    const currentScore = hourlyScores[Math.min(currentIndex, 71)] || hourlyScores[24]; // 範囲外なら今日0時に
+    const currentWeather = {
+      ...currentScore.weatherData || {},
+      tempDiff12h: currentScore.tempDiff12h || 0,  // 過去12時間の気温差
+      feelsLike: currentScore.weatherData?.feelsLike || currentScore.weatherData?.temperature || 15  // 体感温度
+    };
 
     // 6. レポート生成（互換性のため）
     console.log('\n📋 レポートを生成しています...');
@@ -86,11 +90,18 @@ async function forecastCondition() {
       aqi: 50,
       temperatureMax: currentWeather.temperature || 15,
       temperatureMin: currentWeather.temperature || 15,
+      tempDiff12h: currentScore.tempDiff12h || 0,  // 過去12時間の気温差を追加
       scheduleAnalysis: { hasEvents: false, hasMeetings: false, hasOutdoorActivities: false, sleepInterruption: false, mealInterruption: false }
     };
-    const todayDetailedAnalysis = scoreEngine.getDetailedAnalysis(currentScore.factorScores, todayConditionData);
+    // スコアキーを統一（temperatureDiff12h → temperatureDifference）
+    const unifiedScores = {
+      ...currentScore.factorScores,
+      temperatureDifference: currentScore.factorScores.temperatureDiff12h
+    };
+
+    const todayDetailedAnalysis = scoreEngine.getDetailedAnalysis(unifiedScores, todayConditionData);
     const report = reportGenerator.generateReport(
-      { totalScore: currentScore.totalScore, factorScores: currentScore.factorScores, evaluation: scoreEngine.getEvaluation(currentScore.totalScore) },
+      { totalScore: currentScore.totalScore, factorScores: unifiedScores, evaluation: scoreEngine.getEvaluation(currentScore.totalScore) },
       todayDetailedAnalysis,
       currentWeather,
       now

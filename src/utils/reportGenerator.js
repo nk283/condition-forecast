@@ -154,16 +154,18 @@ class ReportGenerator {
       reasoning.push(`• 気温: ${tempMsg}のため${tempScore}点`);
     }
 
-    // 気温差の根拠
+    // 気温差の根拠（72時間モード対応: 過去12時間の気温差が5℃以上で減点）
     const tempDiffScore = Math.round(factorScores.temperatureDifference);
+    const tempDiff12h = weatherData.tempDiff12h !== undefined ? weatherData.tempDiff12h : 0;
     if (tempDiffScore === 100) {
-      reasoning.push(`• 気温差: 日中の気温差が安定(≤10℃)しているため100点`);
+      reasoning.push(`• 気温差: 過去12時間の気温差が安定(≤5℃)しているため100点`);
     } else {
-      // 気温差を推定（逆計算）: penalty = (diff - 10) * 3
+      // 気温差を推定（逆計算）: penalty = (diff - 5) * 10
       // score = 100 - penalty → penalty = 100 - score
       const penalty = 100 - tempDiffScore;
-      const estimatedDiff = (penalty / 3) + 10;
-      reasoning.push(`• 気温差: 日中の気温差が${Math.round(estimatedDiff)}℃程度あるため${tempDiffScore}点`);
+      const estimatedDiff = (penalty / 10) + 5;
+      const displayDiff = tempDiff12h > 0 ? tempDiff12h : Math.round(estimatedDiff * 10) / 10;
+      reasoning.push(`• 気温差: 過去12時間の気温差が${displayDiff}℃あるため${tempDiffScore}点`);
     }
 
     // 湿度の根拠

@@ -102,12 +102,12 @@ class WeatherService {
   }
 
   /**
-   * 72時間（今日00:00 ～ 72時間後）の1時間刻みデータを取得
+   * 72時間（昨日00:00 ～ 明日23:00）の1時間刻みデータを取得
    * 3時間間隔の予報データから線形補間で1時間刻みデータを生成
-   * 開始時刻: 現在日時の00:00:00に固定（ローカルタイムゾーン）
+   * 開始時刻: 昨日の00:00:00に固定（ローカルタイムゾーン）
    *
    * 注: OpenWeather 無料APIは現在時刻から5日先までの予報データのみ提供
-   * そのため、過去データ（昨日）はデフォルト値で補完します
+   * そのため、昨日のデータはデフォルト値で補完します
    */
   async getHourlyForecast72h() {
     try {
@@ -116,14 +116,15 @@ class WeatherService {
       // 現在時刻から計算
       const now = new Date();
 
-      // 本日の00:00:00をローカルタイムで設定
+      // 昨日の00:00:00をローカルタイムで設定
       const startTime = new Date(now);
       startTime.setHours(0, 0, 0, 0);
+      startTime.setDate(startTime.getDate() - 1); // 昨日に設定
 
       const hourlyData = [];
 
       // 1時間刻みの配列を生成（72時間分）
-      // 本日00:00 ～ 3日後00:00
+      // 昨日00:00 ～ 明日23:00（72時間）
       for (let i = 0; i < 72; i++) {
         const targetTime = new Date(startTime.getTime() + i * 60 * 60 * 1000);
         const interpolatedData = this.interpolateWeatherData(forecast3h, targetTime);
