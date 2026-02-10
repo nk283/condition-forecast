@@ -335,7 +335,9 @@ class ConditionScoreEngine {
   calculateTempDiff12h(past12hData) {
     if (past12hData.length === 0) return 0;
 
-    const temps = past12hData.map(d => d.temperature);
+    const temps = past12hData.map(d => d.temperature).filter(t => typeof t === 'number' && !isNaN(t));
+    if (temps.length === 0) return 0;
+
     const maxTemp = Math.max(...temps);
     const minTemp = Math.min(...temps);
 

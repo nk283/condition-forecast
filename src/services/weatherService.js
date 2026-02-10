@@ -102,9 +102,12 @@ class WeatherService {
   }
 
   /**
-   * 72時間（昨日24h + 今日24h + 明日24h）の1時間刻みデータを取得
+   * 72時間（今日00:00 ～ 72時間後）の1時間刻みデータを取得
    * 3時間間隔の予報データから線形補間で1時間刻みデータを生成
-   * 開始時刻: 現在時刻の前日00:00:00に固定（ローカルタイムゾーン）
+   * 開始時刻: 現在日時の00:00:00に固定（ローカルタイムゾーン）
+   *
+   * 注: OpenWeather 無料APIは現在時刻から5日先までの予報データのみ提供
+   * そのため、過去データ（昨日）はデフォルト値で補完します
    */
   async getHourlyForecast72h() {
     try {
@@ -113,14 +116,14 @@ class WeatherService {
       // 現在時刻から計算
       const now = new Date();
 
-      // 前日の00:00:00をローカルタイムで設定
+      // 本日の00:00:00をローカルタイムで設定
       const startTime = new Date(now);
       startTime.setHours(0, 0, 0, 0);
-      startTime.setDate(startTime.getDate() - 1);
 
       const hourlyData = [];
 
       // 1時間刻みの配列を生成（72時間分）
+      // 本日00:00 ～ 3日後00:00
       for (let i = 0; i < 72; i++) {
         const targetTime = new Date(startTime.getTime() + i * 60 * 60 * 1000);
         const interpolatedData = this.interpolateWeatherData(forecast3h, targetTime);
@@ -146,6 +149,11 @@ class WeatherService {
    * 3時間データから1時間データへの線形補間
    */
   interpolateWeatherData(forecast3h, targetTime) {
+    // 予報データが空の場合
+    if (!forecast3h || forecast3h.length === 0) {
+      return this.useClosestData([], targetTime);
+    }
+
     // targetTime の前後の3時間データを取得
     const before = this.findClosestBefore(forecast3h, targetTime);
     const after = this.findClosestAfter(forecast3h, targetTime);
@@ -166,17 +174,17 @@ class WeatherService {
 
     // 各要因を補間
     return {
-      temperature: this.lerp(before.temperature, after.temperature, ratio),
-      humidity: this.lerp(before.humidity, after.humidity, ratio),
-      pressure: this.lerp(before.pressure, after.pressure, ratio),
-      cloudiness: before.cloudiness, // 雲量はStep補間（変化が急なため）
-      windSpeed: this.lerp(before.windSpeed, after.windSpeed, ratio),
-      feelsLike: this.lerp(before.feelsLike, after.feelsLike, ratio),
-      visibility: this.lerp(before.visibility, after.visibility, ratio),
-      rainVolume: before.rainVolume, // 降雨量もStep補間
-      weatherMain: before.weatherMain,
-      weatherDescription: before.weatherDescription,
-      weatherIcon: before.weatherIcon
+      temperature: this.lerp(before.temperature || 15, after.temperature || 15, ratio),
+      humidity: this.lerp(before.humidity || 60, after.humidity || 60, ratio),
+      pressure: this.lerp(before.pressure || 1013, after.pressure || 1013, ratio),
+      cloudiness: before.cloudiness || 50, // 雲量はStep補間（変化が急なため）
+      windSpeed: this.lerp(before.windSpeed || 5, after.windSpeed || 5, ratio),
+      feelsLike: this.lerp(before.feelsLike || 15, after.feelsLike || 15, ratio),
+      visibility: this.lerp(before.visibility || 10000, after.visibility || 10000, ratio),
+      rainVolume: before.rainVolume || 0, // 降雨量もStep補間
+      weatherMain: before.weatherMain || 'Clouds',
+      weatherDescription: before.weatherDescription || '曇り',
+      weatherIcon: before.weatherIcon || '04d'
     };
   }
 
@@ -234,6 +242,7 @@ class WeatherService {
 
   /**
    * 範囲外のデータに対して最も近いデータを使用
+   * データがない場合はデフォルト値を返す
    */
   useClosestData(forecastList, targetTime) {
     const targetUnix = targetTime.getTime() / 1000;
@@ -250,19 +259,36 @@ class WeatherService {
     }
 
     // closest から新規オブジェクトを返す
-    return closest ? {
-      temperature: closest.temperature,
-      humidity: closest.humidity,
-      pressure: closest.pressure,
-      cloudiness: closest.cloudiness,
-      windSpeed: closest.windSpeed,
-      feelsLike: closest.feelsLike,
-      visibility: closest.visibility,
-      rainVolume: closest.rainVolume,
-      weatherMain: closest.weatherMain,
-      weatherDescription: closest.weatherDescription,
-      weatherIcon: closest.weatherIcon
-    } : null;
+    if (closest) {
+      return {
+        temperature: closest.temperature || 15,
+        humidity: closest.humidity || 60,
+        pressure: closest.pressure || 1013,
+        cloudiness: closest.cloudiness || 50,
+        windSpeed: closest.windSpeed || 5,
+        feelsLike: closest.feelsLike || 15,
+        visibility: closest.visibility || 10000,
+        rainVolume: closest.rainVolume || 0,
+        weatherMain: closest.weatherMain || 'Clouds',
+        weatherDescription: closest.weatherDescription || '曇り',
+        weatherIcon: closest.weatherIcon || '04d'
+      };
+    }
+
+    // 予報データが完全にない場合のデフォルト値
+    return {
+      temperature: 15,
+      humidity: 60,
+      pressure: 1013,
+      cloudiness: 50,
+      windSpeed: 5,
+      feelsLike: 15,
+      visibility: 10000,
+      rainVolume: 0,
+      weatherMain: 'Clouds',
+      weatherDescription: '曇り',
+      weatherIcon: '04d'
+    };
   }
 
   /**

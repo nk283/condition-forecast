@@ -850,7 +850,10 @@ class HtmlDashboardGenerator {
     hourlyScores.forEach((score, index) => {
       const date = new Date(score.timestamp);
       const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
-      const color = this.getScoreColor(score.totalScore);
+
+      // totalScore が NaN の場合は 0 を使用
+      const totalScore = isNaN(score.totalScore) ? 0 : score.totalScore;
+      const color = this.getScoreColor(totalScore);
 
       // 現在時刻を判定（時間単位で比較）
       const isCurrentHour =
@@ -866,13 +869,13 @@ class HtmlDashboardGenerator {
       const rowClass = isCurrentHour ? 'class="current-hour"' : '';
       tableHtml += `<tr ${rowClass}>
         <td>${timeStr}</td>
-        <td style="background-color: ${color}; color: white; font-weight: bold;">${score.totalScore}</td>
-        <td>${Math.round(score.factorScores.temperature)}</td>
-        <td>${Math.round(score.factorScores.temperatureDiff12h)}</td>
-        <td>${Math.round(score.factorScores.humidity)}</td>
-        <td>${Math.round(score.factorScores.illumination)}</td>
-        <td>${Math.round(score.factorScores.pressure)}</td>
-        <td>${Math.round(score.factorScores.airQuality)}</td>
+        <td style="background-color: ${color}; color: white; font-weight: bold;">${totalScore}</td>
+        <td>${Math.round(score.factorScores.temperature || 0)}</td>
+        <td>${Math.round(score.factorScores.temperatureDiff12h || 0)}</td>
+        <td>${Math.round(score.factorScores.humidity || 0)}</td>
+        <td>${Math.round(score.factorScores.illumination || 0)}</td>
+        <td>${Math.round(score.factorScores.pressure || 0)}</td>
+        <td>${Math.round(score.factorScores.airQuality || 0)}</td>
         <td>${score.factorScores.schedule === 0 ? '📅' : '✓'}</td>
       </tr>`;
     });
