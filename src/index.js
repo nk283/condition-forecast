@@ -148,7 +148,8 @@ async function forecastCondition() {
       weatherData,
       scheduleAnalysis,
       historicalData,
-      forecastData
+      forecastData,
+      detailedAnalysis
     );
     console.log(`✓ ダッシュボード生成: ${dashboardPath}`);
     console.log(`  ブラウザで開く: ${dashboardPath}`);

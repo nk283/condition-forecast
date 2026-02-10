@@ -12,13 +12,14 @@ class HtmlDashboardGenerator {
   /**
    * ダッシュボードを生成
    */
-  generateDashboard(report, weatherData, scheduleAnalysis, historicalData = {}, forecastData = {}) {
+  generateDashboard(report, weatherData, scheduleAnalysis, historicalData = {}, forecastData = {}, detailedAnalysis = []) {
     const html = this.generateHtml(
       report,
       weatherData,
       scheduleAnalysis,
       historicalData,
-      forecastData
+      forecastData,
+      detailedAnalysis
     );
 
     fs.writeFileSync(this.outputPath, html);
@@ -28,7 +29,7 @@ class HtmlDashboardGenerator {
   /**
    * HTML を生成
    */
-  generateHtml(report, weatherData, scheduleAnalysis, historicalData, forecastData = {}) {
+  generateHtml(report, weatherData, scheduleAnalysis, historicalData, forecastData = {}, detailedAnalysis = []) {
     const dates = Object.keys(historicalData).sort();
     const scores = dates.map(d => historicalData[d].totalScore);
 
@@ -201,6 +202,13 @@ class HtmlDashboardGenerator {
       font-weight: bold;
     }
 
+    .factor-reasoning {
+      font-size: 0.75em;
+      color: #888;
+      margin-top: 5px;
+      line-height: 1.4;
+    }
+
     /* チャートコンテナ */
     .chart-container {
       position: relative;
@@ -369,7 +377,7 @@ class HtmlDashboardGenerator {
       <div class="card">
         <h2>📈 各要因の詳細スコア</h2>
         <div class="factor-scores">
-          ${this.generateFactorScores(report.json.factorScores)}
+          ${this.generateFactorScores(report.json.factorScores, weatherData, detailedAnalysis)}
         </div>
       </div>
 
@@ -508,7 +516,7 @@ class HtmlDashboardGenerator {
   /**
    * 各要因のスコア HTML を生成
    */
-  generateFactorScores(factorScores) {
+  generateFactorScores(factorScores, weatherData = {}, detailedAnalysis = []) {
     const factors = [
       { label: '🌡️ 気温', key: 'temperature' },
       { label: '🌡️ 気温差', key: 'temperatureDifference' },
@@ -525,6 +533,9 @@ class HtmlDashboardGenerator {
       const roundedScore = Math.round(score);
       const color = this.getScoreColor(roundedScore);
 
+      // スコア根拠を取得
+      const reasoning = this.getScoreReasoning(factor.key, roundedScore, weatherData, detailedAnalysis);
+
       return `
         <div class="factor-item">
           <div class="factor-label">${factor.label}</div>
@@ -532,9 +543,84 @@ class HtmlDashboardGenerator {
             <div class="factor-bar-fill" style="width: ${roundedScore}%; background: ${color};"></div>
           </div>
           <div class="factor-value">${roundedScore}/100</div>
+          <div class="factor-reasoning">${reasoning}</div>
         </div>
       `;
     }).join('');
+  }
+
+  /**
+   * スコア根拠を取得
+   */
+  getScoreReasoning(factorKey, score, weatherData, detailedAnalysis) {
+    switch(factorKey) {
+      case 'temperature':
+        if (score === 100) {
+          return `${weatherData.temperature}℃は最適範囲(5-10℃)内`;
+        } else if (score >= 70) {
+          return `${weatherData.temperature}℃は快適範囲内`;
+        } else {
+          return `${weatherData.temperature}℃は快適範囲外`;
+        }
+
+      case 'temperatureDifference':
+        if (score === 100) {
+          return '日中の気温差が安定(≤10℃)';
+        } else {
+          const penalty = 100 - score;
+          const estimatedDiff = Math.round((penalty / 3) + 10);
+          return `気温差が${estimatedDiff}℃程度`;
+        }
+
+      case 'humidity':
+        if (score === 100) {
+          return `${weatherData.humidity}%は最適範囲(40-60%)`;
+        } else if (score >= 70) {
+          return `${weatherData.humidity}%は許容範囲内`;
+        } else {
+          return `${weatherData.humidity}%は不適切`;
+        }
+
+      case 'illumination':
+        const cloudiness = weatherData.cloudiness;
+        let cloudDesc = '';
+        if (cloudiness <= 20) cloudDesc = '快晴';
+        else if (cloudiness <= 40) cloudDesc = '晴れ';
+        else if (cloudiness <= 60) cloudDesc = '曇り';
+        else if (cloudiness <= 80) cloudDesc = '曇天';
+        else cloudDesc = '厚い雲';
+        return `雲量${cloudiness}%で${cloudDesc}`;
+
+      case 'airQuality':
+        if (score === 100) {
+          return '屋内のみの予定';
+        } else {
+          return 'AQI指標に基づく';
+        }
+
+      case 'pressure':
+        if (score === 100) {
+          return `${weatherData.pressure} hPaは最適範囲`;
+        } else if (score >= 80) {
+          return `${weatherData.pressure} hPaは許容範囲`;
+        } else {
+          return `${weatherData.pressure} hPa（低/高気圧）`;
+        }
+
+      case 'schedule':
+        if (score === 100) {
+          return '特に負担となる予定がない';
+        } else {
+          const issues = detailedAnalysis
+            .filter(a => a.factor === 'スケジュール')
+            .map(a => a.issue)
+            .join(', ');
+          return issues || 'スケジュール負荷あり';
+        }
+
+      default:
+        return '';
+    }
   }
 
   /**
