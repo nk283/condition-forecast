@@ -837,6 +837,12 @@ class HtmlDashboardGenerator {
     const illuminationScores = hourlyScores.map(s => s.factorScores.illumination);
     const scheduleScores = hourlyScores.map(s => s.factorScores.schedule);
 
+    // 実データ配列の準備（デュアル軸グラフ用）
+    const temperatures = hourlyScores.map(s => s.weatherData?.temperature || 15);
+    const tempDifferences = hourlyScores.map(s => s.tempDiff12h || 0);
+    const humidities = hourlyScores.map(s => s.weatherData?.humidity || 60);
+    const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || 50);
+
     // 現在時刻を取得
     const now = new Date();
     let currentIndex = -1;
@@ -1108,83 +1114,207 @@ class HtmlDashboardGenerator {
       }
     });
 
-    // 気温スコアグラフ
+    // 気温スコア + 実気温 デュアル軸グラフ
     new Chart(document.getElementById('temperatureChart'), {
       type: 'line',
       data: {
         labels: ${JSON.stringify(labels)},
-        datasets: [{
-          label: '気温スコア',
-          data: ${JSON.stringify(tempScores)},
-          borderColor: 'rgb(255, 152, 0)',
-          backgroundColor: 'rgba(255, 152, 0, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: '気温スコア（左軸）',
+            data: ${JSON.stringify(tempScores)},
+            borderColor: 'rgb(255, 152, 0)',
+            backgroundColor: 'rgba(255, 152, 0, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          },
+          {
+            label: '実気温℃（右軸）',
+            data: ${JSON.stringify(temperatures)},
+            borderColor: 'rgb(244, 67, 54)',
+            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
       },
       options: {
         responsive: true,
-        scales: { y: { min: 0, max: 100 } }
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: -10,
+            max: 35,
+            title: { display: true, text: '気温（℃）' },
+            grid: { drawOnChartArea: false }
+          }
+        }
       }
     });
 
-    // 気温差スコアグラフ
+    // 気温差スコア + 実気温差 デュアル軸グラフ
     new Chart(document.getElementById('tempDiffChart'), {
       type: 'line',
       data: {
         labels: ${JSON.stringify(labels)},
-        datasets: [{
-          label: '気温差スコア（5℃超過で減点）',
-          data: ${JSON.stringify(tempDiffScores)},
-          borderColor: 'rgb(244, 67, 54)',
-          backgroundColor: 'rgba(244, 67, 54, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: '気温差スコア（左軸）',
+            data: ${JSON.stringify(tempDiffScores)},
+            borderColor: 'rgb(244, 67, 54)',
+            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          },
+          {
+            label: '実気温差℃（右軸）',
+            data: ${JSON.stringify(tempDifferences)},
+            borderColor: 'rgb(156, 39, 176)',
+            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
       },
       options: {
         responsive: true,
-        scales: { y: { min: 0, max: 100 } }
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 0,
+            max: 20,
+            title: { display: true, text: '気温差（℃）' },
+            grid: { drawOnChartArea: false }
+          }
+        }
       }
     });
 
-    // 湿度スコアグラフ
+    // 湿度スコア + 実湿度 デュアル軸グラフ
     new Chart(document.getElementById('humidityChart'), {
       type: 'line',
       data: {
         labels: ${JSON.stringify(labels)},
-        datasets: [{
-          label: '湿度スコア（最適 40-60%）',
-          data: ${JSON.stringify(humidityScores)},
-          borderColor: 'rgb(33, 150, 243)',
-          backgroundColor: 'rgba(33, 150, 243, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: '湿度スコア（左軸）',
+            data: ${JSON.stringify(humidityScores)},
+            borderColor: 'rgb(33, 150, 243)',
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          },
+          {
+            label: '実湿度%（右軸）',
+            data: ${JSON.stringify(humidities)},
+            borderColor: 'rgb(0, 150, 136)',
+            backgroundColor: 'rgba(0, 150, 136, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
       },
       options: {
         responsive: true,
-        scales: { y: { min: 0, max: 100 } }
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 0,
+            max: 100,
+            title: { display: true, text: '湿度（%）' },
+            grid: { drawOnChartArea: false }
+          }
+        }
       }
     });
 
-    // 日照スコアグラフ
+    // 日照スコア + 実雲量 デュアル軸グラフ
     new Chart(document.getElementById('illuminationChart'), {
       type: 'line',
       data: {
         labels: ${JSON.stringify(labels)},
-        datasets: [{
-          label: '日照スコア（日没後は中立値）',
-          data: ${JSON.stringify(illuminationScores)},
-          borderColor: 'rgb(255, 193, 7)',
-          backgroundColor: 'rgba(255, 193, 7, 0.1)',
-          fill: true,
-          tension: 0.4
-        }]
+        datasets: [
+          {
+            label: '日照スコア（左軸）',
+            data: ${JSON.stringify(illuminationScores)},
+            borderColor: 'rgb(255, 193, 7)',
+            backgroundColor: 'rgba(255, 193, 7, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          },
+          {
+            label: '雲量%（右軸）',
+            data: ${JSON.stringify(cloudCovers)},
+            borderColor: 'rgb(158, 158, 158)',
+            backgroundColor: 'rgba(158, 158, 158, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
       },
       options: {
         responsive: true,
-        scales: { y: { min: 0, max: 100 } }
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 0,
+            max: 100,
+            title: { display: true, text: '雲量（%）' },
+            grid: { drawOnChartArea: false }
+          }
+        }
       }
     });
 
