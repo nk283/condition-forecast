@@ -104,15 +104,19 @@ class WeatherService {
   /**
    * 72時間（昨日24h + 今日24h + 明日24h）の1時間刻みデータを取得
    * 3時間間隔の予報データから線形補間で1時間刻みデータを生成
+   * 開始時刻: 現在時刻の前日00:00:00に固定（ローカルタイムゾーン）
    */
   async getHourlyForecast72h() {
     try {
       const forecast3h = await this.getForecast();
 
-      // 現在時刻から-24h ～ +48h の範囲を計算
+      // 現在時刻から計算
       const now = new Date();
-      const startTime = new Date(now.getTime() - 24 * 60 * 60 * 1000); // 昨日
-      const endTime = new Date(now.getTime() + 48 * 60 * 60 * 1000);   // 明後日
+
+      // 前日の00:00:00をローカルタイムで設定
+      const startTime = new Date(now);
+      startTime.setHours(0, 0, 0, 0);
+      startTime.setDate(startTime.getDate() - 1);
 
       const hourlyData = [];
 

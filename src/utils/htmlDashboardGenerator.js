@@ -833,8 +833,13 @@ class HtmlDashboardGenerator {
     const totalScores = hourlyScores.map(s => s.totalScore);
     const tempScores = hourlyScores.map(s => s.factorScores.temperature);
     const tempDiffScores = hourlyScores.map(s => s.factorScores.temperatureDiff12h);
+    const humidityScores = hourlyScores.map(s => s.factorScores.humidity);
     const illuminationScores = hourlyScores.map(s => s.factorScores.illumination);
     const scheduleScores = hourlyScores.map(s => s.factorScores.schedule);
+
+    // 現在時刻を取得
+    const now = new Date();
+    let currentIndex = -1;
 
     // テーブルHTMLを生成
     let tableHtml = '<table class="hourly-table"><thead><tr>';
@@ -842,12 +847,24 @@ class HtmlDashboardGenerator {
     tableHtml += '<th>湿度</th><th>日照</th><th>気圧</th><th>空気質</th><th>予定</th>';
     tableHtml += '</tr></thead><tbody>';
 
-    hourlyScores.forEach(score => {
+    hourlyScores.forEach((score, index) => {
       const date = new Date(score.timestamp);
       const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
       const color = this.getScoreColor(score.totalScore);
 
-      tableHtml += `<tr>
+      // 現在時刻を判定（時間単位で比較）
+      const isCurrentHour =
+        date.getUTCFullYear() === now.getUTCFullYear() &&
+        date.getUTCMonth() === now.getUTCMonth() &&
+        date.getUTCDate() === now.getUTCDate() &&
+        date.getUTCHours() === now.getUTCHours();
+
+      if (isCurrentHour) {
+        currentIndex = index;
+      }
+
+      const rowClass = isCurrentHour ? 'class="current-hour"' : '';
+      tableHtml += `<tr ${rowClass}>
         <td>${timeStr}</td>
         <td style="background-color: ${color}; color: white; font-weight: bold;">${score.totalScore}</td>
         <td>${Math.round(score.factorScores.temperature)}</td>
@@ -949,6 +966,12 @@ class HtmlDashboardGenerator {
       background-color: #f0f0f0;
     }
 
+    .hourly-table tr.current-hour {
+      background-color: #fff3cd;
+      font-weight: bold;
+      border-left: 4px solid #ffc107;
+    }
+
     .grid-2 {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -1023,11 +1046,19 @@ class HtmlDashboardGenerator {
 
     <div class="grid-2">
       <div class="card">
+        <h2>💧 湿度スコア推移</h2>
+        <canvas id="humidityChart"></canvas>
+        <div class="note">💦 最適湿度 40-60%（気温20℃以上で高湿度の影響大）</div>
+      </div>
+
+      <div class="card">
         <h2>☀️ 日照スコア推移</h2>
         <canvas id="illuminationChart"></canvas>
         <div class="note">💡 日没後（18:00以降）は中立値（70点）</div>
       </div>
+    </div>
 
+    <div class="grid-2">
       <div class="card">
         <h2>📅 予定スコア推移</h2>
         <canvas id="scheduleChart"></canvas>
@@ -1104,6 +1135,26 @@ class HtmlDashboardGenerator {
           data: ${JSON.stringify(tempDiffScores)},
           borderColor: 'rgb(244, 67, 54)',
           backgroundColor: 'rgba(244, 67, 54, 0.1)',
+          fill: true,
+          tension: 0.4
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: { y: { min: 0, max: 100 } }
+      }
+    });
+
+    // 湿度スコアグラフ
+    new Chart(document.getElementById('humidityChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [{
+          label: '湿度スコア（最適 40-60%）',
+          data: ${JSON.stringify(humidityScores)},
+          borderColor: 'rgb(33, 150, 243)',
+          backgroundColor: 'rgba(33, 150, 243, 0.1)',
           fill: true,
           tension: 0.4
         }]
