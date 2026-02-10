@@ -3,6 +3,8 @@ const WeatherService = require('./services/weatherService');
 const CalendarService = require('./services/calendarService');
 const ConditionScoreEngine = require('./services/conditionScoreEngine');
 const ReportGenerator = require('./utils/reportGenerator');
+const DataStorage = require('./utils/dataStorage');
+const HtmlDashboardGenerator = require('./utils/htmlDashboardGenerator');
 
 /**
  * メイン体調予報関数
@@ -25,6 +27,8 @@ async function forecastCondition() {
     );
 
     const scoreEngine = new ConditionScoreEngine();
+    const dataStorage = new DataStorage();
+    const htmlGenerator = new HtmlDashboardGenerator();
 
     // データを収集
     console.log('📊 データを収集しています...');
@@ -91,6 +95,23 @@ async function forecastCondition() {
       console.log('\n【JSON形式】');
       console.log(JSON.stringify(report.json, null, 2));
     }
+
+    // 過去データを保存
+    console.log('\n💾 データを保存しています...');
+    dataStorage.saveScore(today, result.totalScore, result.factorScores, weatherData, scheduleAnalysis);
+    console.log('✓ スコアを保存');
+
+    // HTML ダッシュボードを生成
+    console.log('\n🎨 HTML ダッシュボードを生成しています...');
+    const historicalData = dataStorage.getRecentScores(7);
+    const dashboardPath = htmlGenerator.generateDashboard(
+      report,
+      weatherData,
+      scheduleAnalysis,
+      historicalData
+    );
+    console.log(`✓ ダッシュボード生成: ${dashboardPath}`);
+    console.log(`  ブラウザで開く: ${dashboardPath}`);
 
     return report;
   } catch (error) {
