@@ -100,18 +100,33 @@ npm run forecast
 ```
 
 #### 方法2: デスクトップショートカットから実行（推奨）
+
+**簡単な方法（推奨）**:
+1. `run_shortcut_setup.bat` をダブルクリック
+2. PowerShellウィンドウが開き、自動でショートカットが作成されます
+3. デスクトップに「体調予報」ショートカットが表示されます
+
+その後、デスクトップの「体調予報」ショートカットをダブルクリックで実行可能です。
+
+**または PowerShell の場合**:
 ```bash
 powershell -ExecutionPolicy Bypass -File create_desktop_shortcut.ps1
 ```
-実行後、デスクトップに「体調予報」ショートカットが作成されます。
-このショートカットをダブルクリックすると、体調予報が実行されます。
 
-#### 方法3: 毎日自動実行を設定
+#### 方法3: 毎日自動実行を設定（推奨）
+
+**簡単な方法（推奨）**:
+1. `setup_task_scheduler.bat` を右クリック
+2. 「管理者として実行」を選択
+3. PowerShellウィンドウが開き、タスクが登録されます
+
+実行後、毎日朝8時に自動で体調予報が実行されます。
+
+**または PowerShell の場合**:
 ```bash
 powershell -ExecutionPolicy Bypass -File setup_task_scheduler.ps1
 ```
 注意: 管理者権限が必要です（「管理者として実行」でPowerShellを開いてください）
-実行後、毎日朝8時に自動で体調予報が実行されます。
 
 ## 🎯 実装済みの機能
 
