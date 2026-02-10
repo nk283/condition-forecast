@@ -16,11 +16,28 @@
 - Windows CMDはデフォルトで Shift-JIS を期待
 - UTF-8 で保存すると日本語が文字化けする
 - Shift-JIS なら確実に動作
+- **重要**: REM コメント行や IF文内の日本語は実行時に文字化けするため、英語のみを使用
 
 **ファイル例**:
 - `run_shortcut_setup.bat`
 - `setup_task_scheduler.bat`
 - `run_forecast.bat`
+
+**重要ルール**: バッチファイル内の日本語について
+- ❌ REM コメント行に日本語を書かない
+- ❌ IF 条件や実行行の日本語を避ける
+- ✅ コメントは英語のみ（例: `REM Create shortcut`）
+- ✅ エコー出力（`echo`）は日本語OK（Shift-JIS保存で機能）
+- ✅ PowerShell呼び出し内の日本語は問題なし
+
+**バッチファイル内で日本語を使う場合の例**:
+```batch
+@echo off
+REM English comment only - Do NOT use Japanese in REM
+echo Japanese text is OK in echo: 日本語はOK
+
+powershell -Command "Write-Host 'PowerShell内なら日本語OK'"
+```
 
 **VS Code での設定**:
 ```json
@@ -200,6 +217,8 @@ iconv -f SHIFT-JIS -t UTF-8 input.bat > output.bat
 新しいファイル作成時に確認：
 
 - [ ] `.bat` ファイルは **Shift-JIS** で保存した
+- [ ] `.bat` ファイル内のコメント（REM）は **英語のみ** にした
+- [ ] `.bat` ファイル内の echo コマンドは日本語OK
 - [ ] `.ps1` ファイルは **Shift-JIS** で保存した
 - [ ] `.js` ファイルは **UTF-8** で保存した
 - [ ] `.md` ファイルは **UTF-8** で保存した
