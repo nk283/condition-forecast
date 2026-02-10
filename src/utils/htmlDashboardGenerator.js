@@ -12,12 +12,13 @@ class HtmlDashboardGenerator {
   /**
    * ダッシュボードを生成
    */
-  generateDashboard(report, weatherData, scheduleAnalysis, historicalData = {}) {
+  generateDashboard(report, weatherData, scheduleAnalysis, historicalData = {}, forecastData = {}) {
     const html = this.generateHtml(
       report,
       weatherData,
       scheduleAnalysis,
-      historicalData
+      historicalData,
+      forecastData
     );
 
     fs.writeFileSync(this.outputPath, html);
@@ -27,9 +28,14 @@ class HtmlDashboardGenerator {
   /**
    * HTML を生成
    */
-  generateHtml(report, weatherData, scheduleAnalysis, historicalData) {
+  generateHtml(report, weatherData, scheduleAnalysis, historicalData, forecastData = {}) {
     const dates = Object.keys(historicalData).sort();
     const scores = dates.map(d => historicalData[d].totalScore);
+
+    // 未来データを準備
+    const forecastDates = Object.keys(forecastData).sort();
+    const forecastScores = forecastDates.map(d => forecastData[d].totalScore);
+
     const evaluationColor = this.getEvaluationColor(report.json.score.total);
 
     const html = `<!DOCTYPE html>
@@ -367,10 +373,33 @@ class HtmlDashboardGenerator {
         </div>
       </div>
 
+      <!-- 未来予報 -->
+      ${forecastDates.length > 0 ? `
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>🔮 未来5日間の体調予報</h2>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px;">
+          ${forecastDates.map((date, idx) => {
+            const forecastItem = forecastData[date];
+            const dateObj = new Date(date);
+            const dateLabel = dateObj.toLocaleDateString('ja-JP', { month: 'numeric', day: 'numeric', weekday: 'short' });
+            const evaluation = this.getEvaluationEmoji(forecastItem.totalScore);
+            return `
+            <div style="border: 2px solid #e0e0e0; border-radius: 8px; padding: 12px; text-align: center; background: #f9f9f9;">
+              <div style="font-weight: bold; color: #666; margin-bottom: 8px;">${dateLabel}</div>
+              <div style="font-size: 1.8em; margin-bottom: 8px;">${forecastItem.totalScore}</div>
+              <div style="font-size: 2em;">${evaluation}</div>
+              <div style="font-size: 0.8em; color: #999; margin-top: 8px;">${this.getEvaluationLevel(forecastItem.totalScore)}</div>
+            </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+      ` : ''}
+
       <!-- 時系列グラフ -->
-      ${dates.length > 1 ? `
-      <div class="card">
-        <h2>📉 スコアの推移（過去${dates.length}日間）</h2>
+      ${(dates.length > 1 || forecastDates.length > 0) ? `
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>📉 スコアの推移（過去${dates.length}日間 + 未来${forecastDates.length}日間）</h2>
         <div class="chart-container">
           <canvas id="timeseriesChart"></canvas>
         </div>
@@ -443,7 +472,7 @@ class HtmlDashboardGenerator {
 
   <script>
     // 時系列グラフを描画
-    ${dates.length > 1 ? this.generateTimeseriesChart(dates, scores) : ''}
+    ${(dates.length > 1 || forecastDates.length > 0) ? this.generateTimeseriesChart(dates, scores, forecastDates, forecastScores) : ''}
   </script>
 </body>
 </html>`;
@@ -512,31 +541,61 @@ class HtmlDashboardGenerator {
   /**
    * 時系列グラフ用の Chart.js コードを生成
    */
-  generateTimeseriesChart(dates, scores) {
+  generateTimeseriesChart(dates, scores, forecastDates = [], forecastScores = []) {
     const dateLabels = dates.map(d => {
       const date = new Date(d);
       return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
     });
+
+    const forecastLabels = forecastDates.map(d => {
+      const date = new Date(d);
+      return date.toLocaleDateString('ja-JP', { month: 'short', day: 'numeric' });
+    });
+
+    // 過去データと未来データを組み合わせたラベル
+    const allLabels = [...dateLabels, ...forecastLabels];
+
+    // 未来データがある場合は2つのデータセット、ない場合は1つ
+    const datasets = [
+      {
+        label: '実績',
+        data: [...scores, ...Array(forecastScores.length).fill(null)],
+        borderColor: 'rgb(102, 126, 234)',
+        backgroundColor: 'rgba(102, 126, 234, 0.1)',
+        borderWidth: 2,
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: 'rgb(102, 126, 234)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
+      }
+    ];
+
+    if (forecastScores.length > 0) {
+      datasets.push({
+        label: '予測',
+        data: [...Array(scores.length).fill(null), ...forecastScores],
+        borderColor: 'rgb(76, 175, 80)',
+        backgroundColor: 'rgba(76, 175, 80, 0.1)',
+        borderWidth: 2,
+        borderDash: [5, 5],
+        fill: true,
+        tension: 0.4,
+        pointRadius: 5,
+        pointBackgroundColor: 'rgb(76, 175, 80)',
+        pointBorderColor: '#fff',
+        pointBorderWidth: 2
+      });
+    }
 
     return `
       const ctx = document.getElementById('timeseriesChart').getContext('2d');
       new Chart(ctx, {
         type: 'line',
         data: {
-          labels: ${JSON.stringify(dateLabels)},
-          datasets: [{
-            label: '総合スコア',
-            data: ${JSON.stringify(scores)},
-            borderColor: 'rgb(102, 126, 234)',
-            backgroundColor: 'rgba(102, 126, 234, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4,
-            pointRadius: 5,
-            pointBackgroundColor: 'rgb(102, 126, 234)',
-            pointBorderColor: '#fff',
-            pointBorderWidth: 2
-          }]
+          labels: ${JSON.stringify(allLabels)},
+          datasets: ${JSON.stringify(datasets)}
         },
         options: {
           responsive: true,
@@ -557,6 +616,36 @@ class HtmlDashboardGenerator {
         }
       });
     `;
+  }
+
+  /**
+   * スコアに応じた絵文字を取得
+   */
+  getEvaluationEmoji(score) {
+    if (score >= 80) {
+      return '😊';
+    } else if (score >= 60) {
+      return '😐';
+    } else if (score >= 40) {
+      return '😓';
+    } else {
+      return '😰';
+    }
+  }
+
+  /**
+   * スコアに応じた評価レベルを取得
+   */
+  getEvaluationLevel(score) {
+    if (score >= 80) {
+      return '良好';
+    } else if (score >= 60) {
+      return '注意';
+    } else if (score >= 40) {
+      return '要注意';
+    } else {
+      return '警告';
+    }
   }
 
   /**

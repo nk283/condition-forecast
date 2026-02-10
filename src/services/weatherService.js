@@ -89,6 +89,76 @@ class WeatherService {
   }
 
   /**
+   * 5日間予報を1日ごとに集約
+   */
+  async getForecastByDay() {
+    try {
+      const forecastList = await this.getForecast();
+      return this.aggregateForecastByDay(forecastList);
+    } catch (error) {
+      console.error('予報データ集約エラー:', error.message);
+      throw error;
+    }
+  }
+
+  /**
+   * 予報リストを1日ごとに集約する
+   * 各日の最高気温、最低気温、平均雲量、平均湿度、平均気圧を計算
+   */
+  aggregateForecastByDay(forecastList) {
+    const dailyData = {};
+
+    // 3時間ごとのデータを日ごとに集約
+    forecastList.forEach(item => {
+      const date = item.timestamp.toISOString().split('T')[0]; // "YYYY-MM-DD"
+
+      if (!dailyData[date]) {
+        dailyData[date] = {
+          date: date,
+          tempMax: -Infinity,
+          tempMin: Infinity,
+          tempCurrent: item.temperature,
+          cloudAvg: 0,
+          humidityAvg: 0,
+          pressureAvg: 0,
+          rainTotal: 0,
+          count: 0,
+          items: []
+        };
+      }
+
+      const data = dailyData[date];
+      data.tempMax = Math.max(data.tempMax, item.temperature);
+      data.tempMin = Math.min(data.tempMin, item.temperature);
+      data.cloudAvg += item.cloudiness;
+      data.humidityAvg += item.humidity;
+      data.pressureAvg += item.pressure;
+      data.rainTotal += item.rainVolume;
+      data.count++;
+      data.items.push(item);
+    });
+
+    // 平均値を計算し、配列に変換
+    const result = [];
+    Object.keys(dailyData)
+      .sort()
+      .forEach(date => {
+        const data = dailyData[date];
+        data.cloudAvg = Math.round(data.cloudAvg / data.count);
+        data.humidityAvg = Math.round(data.humidityAvg / data.count);
+        data.pressureAvg = Math.round(data.pressureAvg / data.count);
+        data.aqi = 50; // デフォルト値（実際の空気質データがない場合）
+
+        // 予報最初の日は除外（不完全なデータ）
+        if (data.count > 4) {
+          result.push(data);
+        }
+      });
+
+    return result;
+  }
+
+  /**
    * 天気データをフォーマット
    */
   formatWeatherData(data) {

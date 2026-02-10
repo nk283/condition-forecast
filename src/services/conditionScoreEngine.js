@@ -16,38 +16,45 @@ class ConditionScoreEngine {
 
   /**
    * 気温スコアを計算（5℃～10℃が最適）
+   * 気温差（tempMax - tempMin）も考慮
    */
-  calculateTemperatureScore(temp) {
+  calculateTemperatureScore(temp, tempMax = null, tempMin = null) {
     // 最適温度: 5℃～10℃
     const optimalMin = 5;
     const optimalMax = 10;
     const comfortMin = 5;
     const comfortMax = 20;
 
-    if (temp >= optimalMin && temp <= optimalMax) {
-      return 100; // 最適
-    }
+    let baseScore = 50;
 
-    if (temp >= comfortMin && temp <= comfortMax) {
+    if (temp >= optimalMin && temp <= optimalMax) {
+      baseScore = 100; // 最適
+    } else if (temp >= comfortMin && temp <= comfortMax) {
       // 快適範囲内: 70-100
       if (temp < optimalMin) {
-        return 70 + ((temp - comfortMin) / (optimalMin - comfortMin)) * 30;
+        baseScore = 70 + ((temp - comfortMin) / (optimalMin - comfortMin)) * 30;
       } else {
-        return 70 + ((comfortMax - temp) / (comfortMax - optimalMax)) * 30;
+        baseScore = 70 + ((comfortMax - temp) / (comfortMax - optimalMax)) * 30;
+      }
+    } else if (temp < comfortMin) {
+      // 寒冷: 0℃以下
+      baseScore = Math.max(10, 70 - (comfortMin - temp) * 5);
+    } else if (temp > comfortMax) {
+      // 高温: 20℃以上
+      baseScore = Math.max(20, 70 - (temp - comfortMax) * 5);
+    }
+
+    // 気温差ペナルティ（tempMax と tempMin が提供されている場合）
+    if (tempMax !== null && tempMin !== null) {
+      const tempDiff = tempMax - tempMin;
+      // 気温差が10℃を超える場合は減点
+      if (tempDiff > 10) {
+        const penalty = (tempDiff - 10) * 3; // 1℃あたり3点減点
+        baseScore -= penalty;
       }
     }
 
-    // 寒冷: 0℃以下
-    if (temp < comfortMin) {
-      return Math.max(10, 70 - (comfortMin - temp) * 5);
-    }
-
-    // 高温: 20℃以上
-    if (temp > comfortMax) {
-      return Math.max(20, 70 - (temp - comfortMax) * 5);
-    }
-
-    return 50;
+    return Math.max(10, baseScore);
   }
 
   /**
@@ -79,24 +86,30 @@ class ConditionScoreEngine {
   /**
    * 日照スコアを計算
    * 日中の照度が低いと頭がぼーっとする
+   * cloudCoverage: 雲量（0～100%、0=快晴、100=曇天）
    */
-  calculateIlluminationScore(daylight, hour) {
+  calculateIlluminationScore(cloudCoverage, hour) {
     // 夜間（21時～5時）は日照スコアを適用しない
     if (hour >= 21 || hour < 5) {
       return 100;
     }
 
-    // 日中（9時～17時）に日照時間が短いと悪影響
-    if (daylight < 2) {
-      return 40; // 暗い日
+    // 雲量ベースのスコア計算
+    // 雲量が少ない（晴れ）→ スコア高
+    // 雲量が多い（曇り）→ スコア低
+    if (cloudCoverage <= 20) {
+      return 100; // 快晴
     }
-    if (daylight < 4) {
-      return 60;
+    if (cloudCoverage <= 40) {
+      return 90; // 晴れ
     }
-    if (daylight < 6) {
-      return 80;
+    if (cloudCoverage <= 60) {
+      return 70; // 曇り
     }
-    return 100; // 十分な日照
+    if (cloudCoverage <= 80) {
+      return 50; // 曇天
+    }
+    return 40; // 厚い雲
   }
 
   /**
@@ -182,10 +195,17 @@ class ConditionScoreEngine {
    * 総合体調スコアを計算
    */
   calculateTotalScore(data) {
+    // 時刻の決定（外部から指定されていればそれを使用、なければ現在時刻）
+    const hour = data.hour !== undefined ? data.hour : new Date().getHours();
+
     const scores = {
-      temperature: this.calculateTemperatureScore(data.temperature),
+      temperature: this.calculateTemperatureScore(
+        data.temperature,
+        data.temperatureMax || null,
+        data.temperatureMin || null
+      ),
       humidity: this.calculateHumidityScore(data.humidity, data.temperature),
-      illumination: this.calculateIlluminationScore(data.daylightHours, new Date().getHours()),
+      illumination: this.calculateIlluminationScore(data.cloudCoverage || data.daylightHours || 50, hour),
       airQuality: this.calculateAirQualityScore(data.aqi, data.hasOutdoorPlans),
       pressure: this.calculatePressureScore(data.pressure),
       schedule: this.calculateScheduleScore(data.scheduleAnalysis)
@@ -236,6 +256,32 @@ class ConditionScoreEngine {
         advice: '体調が悪いです。休息を優先してください。'
       };
     }
+  }
+
+  /**
+   * 複数日の体調スコアを計算
+   * 予報データから各日の体調スコアを計算
+   */
+  calculateMultiDayScores(forecastArray) {
+    return forecastArray.map(dayData => {
+      const score = this.calculateTotalScore({
+        temperature: (dayData.tempMax + dayData.tempMin) / 2,
+        temperatureMax: dayData.tempMax,
+        temperatureMin: dayData.tempMin,
+        humidity: dayData.humidityAvg,
+        cloudCoverage: dayData.cloudAvg,
+        aqi: dayData.aqi || 50,
+        pressure: dayData.pressureAvg,
+        hasOutdoorPlans: false,
+        scheduleAnalysis: { hasEvents: false, hasMeetings: false, hasOutdoorActivities: false, sleepInterruption: false, mealInterruption: false },
+        hour: 12 // デフォルト12時で評価
+      });
+
+      return {
+        date: dayData.date,
+        ...score
+      };
+    });
   }
 
   /**

@@ -32,6 +32,7 @@ class DataStorage {
       scores[dateStr] = {
         date: dateStr,
         timestamp: date.toISOString(),
+        type: 'actual',
         totalScore: Math.round(totalScore),
         factorScores: {
           temperature: Math.round(factorScores.temperature),
@@ -55,6 +56,71 @@ class DataStorage {
     } catch (error) {
       console.error('スコア保存エラー:', error.message);
       return false;
+    }
+  }
+
+  /**
+   * 予測スコアを保存
+   */
+  saveForecastScore(date, totalScore, factorScores, weatherData = null) {
+    try {
+      const dateStr = typeof date === 'string' ? date : date.toISOString().split('T')[0];
+      const scores = this.loadAllScores();
+
+      // 同じ日付があれば上書き
+      scores[dateStr] = {
+        date: dateStr,
+        timestamp: new Date().toISOString(),
+        type: 'forecast',
+        totalScore: Math.round(totalScore),
+        factorScores: {
+          temperature: Math.round(factorScores.temperature),
+          humidity: Math.round(factorScores.humidity),
+          illumination: Math.round(factorScores.illumination),
+          airQuality: Math.round(factorScores.airQuality),
+          pressure: Math.round(factorScores.pressure),
+          schedule: Math.round(factorScores.schedule)
+        },
+        weather: weatherData ? {
+          temperature: weatherData.temperature,
+          humidity: weatherData.humidity,
+          pressure: weatherData.pressure,
+          description: weatherData.weatherDescription
+        } : null
+      };
+
+      fs.writeFileSync(this.storagePath, JSON.stringify(scores, null, 2));
+      return true;
+    } catch (error) {
+      console.error('予測スコア保存エラー:', error.message);
+      return false;
+    }
+  }
+
+  /**
+   * 未来予測データを取得
+   */
+  getForecastScores() {
+    try {
+      const scores = this.loadAllScores();
+      const forecastData = {};
+
+      Object.keys(scores).forEach(dateStr => {
+        if (scores[dateStr].type === 'forecast') {
+          forecastData[dateStr] = scores[dateStr];
+        }
+      });
+
+      // 日付でソート
+      return Object.keys(forecastData)
+        .sort()
+        .reduce((sorted, key) => {
+          sorted[key] = forecastData[key];
+          return sorted;
+        }, {});
+    } catch (error) {
+      console.warn('予測データ取得エラー:', error.message);
+      return {};
     }
   }
 
