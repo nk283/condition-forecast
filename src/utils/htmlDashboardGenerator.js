@@ -854,7 +854,7 @@ class HtmlDashboardGenerator {
     const humidities = hourlyScores.map(s => s.weatherData?.humidity || 60);
     const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || 50);
     const pressures = hourlyScores.map(s => s.weatherData?.pressure || 1013);
-    const pressureDifferences = hourlyScores.map(s => s.factorScores?.pressureDifference_raw || 0); // 気圧差の元データ
+    const pressureDifferences = hourlyScores.map(s => s.pressureDiff12h || 0); // 過去12時間の気圧差
     const aqiValues = hourlyScores.map(() => this.aqi); // AQIは全時間で統一値
 
     // 軸範囲を計算（データに応じて動的調整）
