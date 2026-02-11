@@ -39,8 +39,42 @@ async function forecastCondition() {
 
     // 1. 72時間の1時間刻み天気データを取得
     console.log('⏳ 72時間の天気データを取得中...');
-    const hourly72h = await weatherService.getHourlyForecast72h();
+    let hourly72h = await weatherService.getHourlyForecast72h();
     console.log(`✓ 72時間の天気データを取得 (${hourly72h.length}時間分)`);
+
+    // 1.5. 保存済みの過去データで補完（昨日のデータなど）
+    console.log('📦 保存済みデータから過去データを復元中...');
+    try {
+      const startTime = new Date(now);
+      startTime.setDate(startTime.getDate() - 1);
+      startTime.setHours(0, 0, 0, 0);
+
+      const savedScores = dataStorage.getHourlyScores(startTime, new Date(now.getTime() + 48 * 60 * 60 * 1000));
+
+      // 保存済みデータで hourly72h を補完
+      savedScores.forEach(savedScore => {
+        const existingIndex = hourly72h.findIndex(h => h.timestamp === savedScore.timestamp);
+        if (existingIndex !== -1 && !hourly72h[existingIndex].temperature) {
+          // API データがない場合、保存済みデータで補完
+          hourly72h[existingIndex] = {
+            ...hourly72h[existingIndex],
+            ...savedScore.weatherData,
+            temperature: savedScore.weatherData?.temperature || null,
+            humidity: savedScore.weatherData?.humidity || null,
+            pressure: savedScore.weatherData?.pressure || null,
+            cloudiness: savedScore.weatherData?.cloudiness || null,
+            windSpeed: savedScore.weatherData?.windSpeed || null,
+            feelsLike: savedScore.weatherData?.feelsLike || null,
+            weatherDescription: savedScore.weatherData?.weatherDescription || null
+          };
+        }
+      });
+
+      console.log(`✓ 保存済みデータを復元 (${savedScores.filter(s => s.weatherData).length}件)`);
+    } catch (error) {
+      console.warn('⚠️  保存済みデータ復元エラー:', error.message);
+      console.warn('   新規データのみで続行します');
+    }
 
     // 2. Google Calendar の72時間予定を取得
     let scheduleData = [];
