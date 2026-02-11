@@ -327,9 +327,19 @@ class ConditionScoreEngine {
     for (let i = 0; i < hourlyData.length; i++) {
       const data = hourlyData[i];
 
+      // データが null の場合はスキップ（不足データは記録しない）
+      if (data.temperature === null || data.temperature === undefined ||
+          data.humidity === null || data.humidity === undefined ||
+          data.pressure === null || data.pressure === undefined ||
+          data.cloudiness === null || data.cloudiness === undefined) {
+        // console.log(`⏭️  ${data.timestamp}: データなしのためスキップ`);
+        continue; // スコア計算をスキップ
+      }
+
       // 過去12時間の気温データと気圧データを取得（ i-12 ～ i）
       const past12hStart = Math.max(0, i - 12);
-      const past12h = hourlyData.slice(past12hStart, i + 1);
+      const past12h = hourlyData.slice(past12hStart, i + 1)
+        .filter(d => d.temperature !== null && d.temperature !== undefined); // null データを除外
       const tempDiff12h = this.calculateTempDiff12h(past12h);
       const pressureDiff12h = this.calculatePressureDiff12h(past12h);
 

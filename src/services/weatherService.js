@@ -148,7 +148,7 @@ class WeatherService {
         let weatherData;
 
         // *** 改善版3段階のロジック ***
-        // 優先度: 新規予報 > 過去ファイル > 最近接データ
+        // 優先度: 新規予報 > 過去ファイル > null（データなし）
         if (targetTime >= nowStartOfHour) {
           // 【優先1】現在時刻以降のデータは、APIの予報データから補間（最新かつ正確）
           weatherData = this.interpolateWeatherData(forecast3h, targetTime);
@@ -159,9 +159,9 @@ class WeatherService {
           // console.log(`  📂 ${localDateTime}: 過去ファイルから復元`);
         } else {
           // 【優先3】現在時刻より過去で、過去ファイルにもないデータ
-          // （初回実行時など）最も近い予報データで代用
-          weatherData = this.useClosestData(forecast3h, targetTime);
-          // console.log(`  ⚠️ ${localDateTime}: 最近接データで補完`);
+          // データが存在しないため null を設定（仮のデータは当てはめない）
+          weatherData = null;
+          // console.log(`  ❌ ${localDateTime}: データなし`);
         }
 
         hourlyData.push({
@@ -169,7 +169,7 @@ class WeatherService {
           hour: targetTime.getHours(),
           date: targetTime.toLocaleDateString('ja-JP'),
           dateObj: targetTime,
-          ...weatherData
+          ...weatherData  // null の場合は何も追加されない
         });
       }
 
@@ -183,11 +183,14 @@ class WeatherService {
 
   /**
    * 3時間データから1時間データへの線形補間
+   *
+   * データが存在しない場合は null を返す
+   * 仮のデフォルト値は当てはめない
    */
   interpolateWeatherData(forecast3h, targetTime) {
     // 予報データが空の場合
     if (!forecast3h || forecast3h.length === 0) {
-      return this.useClosestData([], targetTime);
+      return null; // デフォルト値を返さず null を返す
     }
 
     // targetTime の前後の3時間データを取得
@@ -195,8 +198,8 @@ class WeatherService {
     const after = this.findClosestAfter(forecast3h, targetTime);
 
     if (!before || !after) {
-      // 範囲外の場合: 最も近いデータを使用
-      return this.useClosestData(forecast3h, targetTime);
+      // 範囲外の場合: null を返す（仮のデータを返さない）
+      return null;
     }
 
     // 線形補間比率を計算
@@ -208,21 +211,7 @@ class WeatherService {
 
     // totalDiff が 0 の場合（before と after が同じ時刻）は補間不可
     if (totalDiff === 0) {
-      return {
-        temperature: before.temperature || 15,
-        humidity: before.humidity || 60,
-        pressure: before.pressure || 1013,
-        cloudiness: before.cloudiness || 50,
-        windSpeed: before.windSpeed || 5,
-        feelsLike: before.feelsLike || 15,
-        visibility: before.visibility || 10000,
-        rainVolume: before.rainVolume || 0,
-        weatherMain: before.weatherMain || 'Clouds',
-        weatherDescription: before.weatherDescription || '曇り',
-        weatherIcon: before.weatherIcon || '04d',
-        sunriseHour: before.sunriseHour !== null && before.sunriseHour !== undefined ? before.sunriseHour : 6,
-        sunsetHour: before.sunsetHour !== null && before.sunsetHour !== undefined ? before.sunsetHour : 18
-      };
+      return null; // 補間できないため null を返す（仮のデータを返さない）
     }
 
     const targetDiff = targetTimeUnix - beforeTime;
@@ -245,23 +234,9 @@ class WeatherService {
       sunsetHour: before.sunsetHour !== null && before.sunsetHour !== undefined ? before.sunsetHour : 18   // 日没時刻（デフォルト: 18時）
     };
 
-    // NaN チェック: 計算結果が NaN なら before のデータを使用
+    // NaN チェック: 計算結果が NaN なら null を返す
     if (isNaN(interpolated.temperature) || isNaN(interpolated.humidity)) {
-      return {
-        temperature: before.temperature || 15,
-        humidity: before.humidity || 60,
-        pressure: before.pressure || 1013,
-        cloudiness: before.cloudiness || 50,
-        windSpeed: before.windSpeed || 5,
-        feelsLike: before.feelsLike || 15,
-        visibility: before.visibility || 10000,
-        rainVolume: before.rainVolume || 0,
-        weatherMain: before.weatherMain || 'Clouds',
-        weatherDescription: before.weatherDescription || '曇り',
-        weatherIcon: before.weatherIcon || '04d',
-        sunriseHour: before.sunriseHour !== null && before.sunriseHour !== undefined ? before.sunriseHour : 6,
-        sunsetHour: before.sunsetHour !== null && before.sunsetHour !== undefined ? before.sunsetHour : 18
-      };
+      return null; // 計算失敗のため null を返す（仮のデータを返さない）
     }
 
     return interpolated;
@@ -350,41 +325,8 @@ class WeatherService {
       }
     }
 
-    // closest から新規オブジェクトを返す
-    if (closest) {
-      return {
-        temperature: closest.temperature || 15,
-        humidity: closest.humidity || 60,
-        pressure: closest.pressure || 1013,
-        cloudiness: closest.cloudiness || 50,
-        windSpeed: closest.windSpeed || 5,
-        feelsLike: closest.feelsLike || 15,
-        visibility: closest.visibility || 10000,
-        rainVolume: closest.rainVolume || 0,
-        weatherMain: closest.weatherMain || 'Clouds',
-        weatherDescription: closest.weatherDescription || '曇り',
-        weatherIcon: closest.weatherIcon || '04d',
-        sunriseHour: closest.sunriseHour !== null && closest.sunriseHour !== undefined ? closest.sunriseHour : 6,
-        sunsetHour: closest.sunsetHour !== null && closest.sunsetHour !== undefined ? closest.sunsetHour : 18
-      };
-    }
-
-    // 予報データが完全にない場合のデフォルト値
-    return {
-      temperature: 15,
-      humidity: 60,
-      pressure: 1013,
-      cloudiness: 50,
-      windSpeed: 5,
-      feelsLike: 15,
-      visibility: 10000,
-      rainVolume: 0,
-      weatherMain: 'Clouds',
-      weatherDescription: '曇り',
-      weatherIcon: '04d',
-      sunriseHour: 6,
-      sunsetHour: 18
-    };
+    // データが存在しない場合は null を返す（仮のデータを返さない）
+    return null;
   }
 
   /**
