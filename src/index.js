@@ -152,7 +152,6 @@ async function forecastCondition() {
 
     // 8. HTML ダッシュボードを生成
     console.log('\n🎨 HTML ダッシュボードを生成しています...');
-    console.log(`📊 ダッシュボード生成時のhourlyScores.length = ${hourlyScores.length}`);
     htmlGenerator.setAQI(aqi); // AQIをダッシュボード生成器に渡す
     const dashboardPath = htmlGenerator.generateHourlyDashboard(hourlyScores);
     console.log(`✓ ダッシュボード生成: ${dashboardPath}`);

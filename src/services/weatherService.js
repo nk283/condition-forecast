@@ -160,12 +160,17 @@ class WeatherService {
         if (weatherData) validCount++;
         else nullCount++;
 
+        // NOTE: weatherData には timestamp (Date オブジェクト) が含まれるため、
+        // スプレッド前に別のプロパティを定義し、その後で上書きして文字列 timestamp を保持
+        const dataToAdd = weatherData ? { ...weatherData } : {};
+        delete dataToAdd.timestamp; // API の timestamp (Date オブジェクト) を除外
+
         hourlyData.push({
-          timestamp: localDateTime,
+          timestamp: localDateTime,  // 文字列タイムスタンプ（localDateTime で固定）
           hour: targetTime.getHours(),
           date: targetTime.toLocaleDateString('ja-JP'),
           dateObj: targetTime,
-          ...(weatherData || {})  // 型を統一
+          ...dataToAdd  // API データの他のプロパティを展開
         });
       }
 
