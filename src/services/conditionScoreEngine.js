@@ -148,30 +148,74 @@ class ConditionScoreEngine {
 
   /**
    * 気圧スコアを計算
-   * 低気圧で頭がぼーっとする
+   *
+   * 【気圧と体調の関係】
+   * - 最適: 1010-1015 hPa → 100点（標準気圧付近）
+   * - 良好: 1000-1025 hPa → 80-95点（許容範囲、わずかな不調の可能性）
+   * - 注意: 990-1000 hPa または 1025-1035 hPa → 60-80点（低気圧・高気圧の影響あり）
+   * - 警告: 990 hPa未満 または 1035 hPa超 → 30-60点（明確な体調変化が予想される）
+   *
+   * 【具体例】
+   * - 1013 hPa → 100点（標準気圧）
+   * - 1020 hPa → 85点（わずかに高気圧）
+   * - 1000 hPa → 80点（許容範囲下限）
+   * - 980 hPa → 40点（低気圧で頭ぼーっと）
+   * - 1040 hPa → 55点（高気圧で体が重い）
    */
   calculatePressureScore(pressure) {
-    // 標準気圧: 1013 hPa
     const standardPressure = 1013;
+    const diff = Math.abs(pressure - standardPressure); // 標準気圧からの偏差
 
+    // 最適範囲: 1010-1015 hPa
     if (pressure >= 1010 && pressure <= 1015) {
-      return 100; // 最適
+      return 100;
     }
 
-    if (pressure >= 990 && pressure <= 1030) {
-      return 80; // 許容範囲
+    // 最適範囲の近く: 1005-1025 hPa
+    if (pressure >= 1005 && pressure < 1010) {
+      // 1005→95点、1009→100点へ線形変化
+      return Math.round(95 + (pressure - 1005) / 5 * 5);
     }
 
+    if (pressure > 1015 && pressure <= 1025) {
+      // 1015→100点、1025→85点へ線形変化
+      return Math.round(100 - (pressure - 1015) / 10 * 15);
+    }
+
+    // 許容範囲下限: 1000-1005 hPa
+    if (pressure >= 1000 && pressure < 1005) {
+      // 1000→80点、1005→95点へ線形変化
+      return Math.round(80 + (pressure - 1000) / 5 * 15);
+    }
+
+    // 許容範囲上限: 1025-1035 hPa
+    if (pressure > 1025 && pressure <= 1035) {
+      // 1025→85点、1035→50点へ線形変化
+      return Math.round(85 - (pressure - 1025) / 10 * 35);
+    }
+
+    // 低気圧: 990-1000 hPa
+    if (pressure >= 990 && pressure < 1000) {
+      // 1000→80点、990→40点へ線形変化
+      return Math.round(80 - (1000 - pressure) / 10 * 40);
+    }
+
+    // 高気圧: 1035-1045 hPa
+    if (pressure > 1035 && pressure <= 1045) {
+      // 1035→50点、1045→30点へ線形変化
+      return Math.round(50 - (pressure - 1035) / 10 * 20);
+    }
+
+    // 極端な低気圧: 990 hPa未満
     if (pressure < 990) {
-      // 低気圧の影響
-      const diff = 990 - pressure;
-      return Math.max(30, 80 - diff * 2);
+      const extremeLow = Math.max(15, 40 - (990 - pressure) * 1.5);
+      return Math.round(extremeLow);
     }
 
-    if (pressure > 1030) {
-      // 高気圧の影響
-      const diff = pressure - 1030;
-      return Math.max(50, 80 - diff);
+    // 極端な高気圧: 1045 hPa超
+    if (pressure > 1045) {
+      const extremeHigh = Math.max(15, 30 - (pressure - 1045) * 1.5);
+      return Math.round(extremeHigh);
     }
 
     return 70;

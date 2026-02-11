@@ -853,6 +853,7 @@ class HtmlDashboardGenerator {
     const humidities = hourlyScores.map(s => s.weatherData?.humidity || 60);
     const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || 50);
     const pressures = hourlyScores.map(s => s.weatherData?.pressure || 1013);
+    const aqiValues = hourlyScores.map(() => this.aqi); // AQIは全時間で統一値
 
     // 軸範囲を計算（データに応じて動的調整）
     const scoreAxisRange = this.calculateScoreAxisRange(totalScores);
@@ -861,6 +862,9 @@ class HtmlDashboardGenerator {
     const humidityAxisRange = this.calculateDataAxisRange(humidities);
     const cloudAxisRange = this.calculateDataAxisRange(cloudCovers);
     const pressureAxisRange = this.calculateDataAxisRange(pressures);
+
+    // AQI軸の範囲（固定: 0-500）
+    const aqiAxisRange = { min: 0, max: Math.ceil(this.aqi / 50) * 50 || 100 };
 
     // 現在時刻を取得
     const now = new Date();
@@ -1410,29 +1414,54 @@ class HtmlDashboardGenerator {
       type: 'line',
       data: {
         labels: ${JSON.stringify(labels)},
-        datasets: [{
-          label: '空気質スコア',
-          data: ${JSON.stringify(airQualityScores)},
-          borderColor: 'rgb(156, 39, 176)',
-          backgroundColor: 'rgba(156, 39, 176, 0.1)',
-          fill: true,
-          tension: 0.4,
-          pointBackgroundColor: function(context) {
-            const value = context.parsed.y;
-            if (value >= 80) return 'rgb(76, 175, 80)';
-            if (value >= 60) return 'rgb(255, 193, 7)';
-            if (value >= 40) return 'rgb(255, 152, 0)';
-            return 'rgb(244, 67, 54)';
+        datasets: [
+          {
+            label: '空気質スコア（左軸）',
+            data: ${JSON.stringify(airQualityScores)},
+            borderColor: 'rgb(156, 39, 176)',
+            backgroundColor: 'rgba(156, 39, 176, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y',
+            pointBackgroundColor: function(context) {
+              const value = context.parsed.y;
+              if (value >= 80) return 'rgb(76, 175, 80)';
+              if (value >= 60) return 'rgb(255, 193, 7)';
+              if (value >= 40) return 'rgb(255, 152, 0)';
+              return 'rgb(244, 67, 54)';
+            }
+          },
+          {
+            label: '実AQI値（右軸）',
+            data: ${JSON.stringify(aqiValues)},
+            borderColor: 'rgb(233, 30, 99)',
+            backgroundColor: 'rgba(233, 30, 99, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
           }
-        }]
+        ]
       },
       options: {
         responsive: true,
+        interaction: { mode: 'index', intersect: false },
         scales: {
           y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
             min: 0,
             max: 100,
             title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: ${JSON.stringify(aqiAxisRange.min)},
+            max: ${JSON.stringify(aqiAxisRange.max)},
+            title: { display: true, text: 'AQI値' },
+            grid: { drawOnChartArea: false }
           }
         }
       }
