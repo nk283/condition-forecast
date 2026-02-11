@@ -99,6 +99,8 @@ class ConditionScoreEngine {
    * 日照スコアを計算
    * 日中の照度が低いと頭がぼーっとする
    * cloudCoverage: 雲量（0～100%、0=快晴、100=曇天）
+   * sunriseHour: 日の出時刻（時間、例: 6.5 = 6:30）
+   * sunsetHour: 日没時刻（時間、例: 17.5 = 17:30）
    *
    * 【スコア計算ルール】
    * 雲量と日照スコアは逆比例
@@ -109,11 +111,18 @@ class ConditionScoreEngine {
    * 計算式: スコア = 100 - 雲量(%)
    *
    * 夜間は日照の影響を受けないため常に50点（中立値）
+   * ※ 日の出・日没時間がない場合は、デフォルト: 18時～6時を夜間とする
    */
-  calculateIlluminationScore(cloudCoverage, hour) {
-    // 夜間（21時～5時）は日照スコアを適用しない（常に中立値50点）
-    if (hour >= 21 || hour < 5) {
-      return 50;
+  calculateIlluminationScore(cloudCoverage, hour, sunriseHour = null, sunsetHour = null) {
+    // 日の出・日没時間のデフォルト値（冬時間対応: 18時～6時を夜間）
+    const sunrise = sunriseHour !== null ? sunriseHour : 6;
+    const sunset = sunsetHour !== null ? sunsetHour : 18;
+
+    // 夜間判定：日没～日出までを夜間
+    const isNight = hour < sunrise || hour >= sunset;
+
+    if (isNight) {
+      return 50; // 夜間は日照の影響なし（中立値50点）
     }
 
     // 日中：雲量とスコアが逆比例
@@ -329,7 +338,12 @@ class ConditionScoreEngine {
         temperature: this.calculateTemperatureScore(data.temperature),
         temperatureDiff12h: this.calculateTempDiffScore(tempDiff12h),
         humidity: this.calculateHumidityScore(data.humidity, data.temperature),
-        illumination: this.calculateSunshineScoreHourly(data.cloudiness, data.hour),
+        illumination: this.calculateSunshineScoreHourly(
+          data.cloudiness,
+          data.hour,
+          data.sunriseHour,  // 気象データから日の出時間を取得
+          data.sunsetHour    // 気象データから日没時間を取得
+        ),
         airQuality: this.calculateAirQualityScore(aqi, false), // 屋内判定は常にfalse（屋外活動を想定）
         pressure: this.calculatePressureScore(data.pressure),
         pressureDifference: this.calculatePressureDifferenceScore(pressureDiff12h),
@@ -417,7 +431,12 @@ class ConditionScoreEngine {
 
   /**
    * 日照スコア（日没後対応版）
-   * 日中（6:00-18:00）のみ、日没後は中立値を返す
+   * 日の出・日没時間を指定して、その時間帯のみ日照スコアを計算
+   *
+   * @param {number} cloudCoverage - 雲量（0～100%）
+   * @param {number} hour - 時刻（0-23）
+   * @param {number} sunriseHour - 日の出時刻（時間、デフォルト: 6）
+   * @param {number} sunsetHour - 日没時刻（時間、デフォルト: 18）
    *
    * 【スコア計算ルール】
    * 雲量と日照スコアは逆比例
@@ -427,14 +446,16 @@ class ConditionScoreEngine {
    *
    * 計算式: スコア = 100 - 雲量(%)
    * 夜間は常に50点（中立値）
+   *
+   * 【デフォルト時間帯】
+   * 冬季に対応した 6:00（日の出） ～ 18:00（日没）
    */
-  calculateSunshineScoreHourly(cloudCoverage, hour) {
-    const sunrise = 5;
-    const sunset = 21;
+  calculateSunshineScoreHourly(cloudCoverage, hour, sunriseHour = 6, sunsetHour = 18) {
+    // 夜間判定：日没～日出までを夜間
+    const isNight = hour < sunriseHour || hour >= sunsetHour;
 
-    // 夜間（21時～5時）は中立値50点
-    if (hour >= sunset || hour < sunrise) {
-      return 50;
+    if (isNight) {
+      return 50; // 夜間は日照の影響なし（中立値50点）
     }
 
     // 日中：雲量とスコアが逆比例

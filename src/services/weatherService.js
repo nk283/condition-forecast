@@ -219,7 +219,9 @@ class WeatherService {
         rainVolume: before.rainVolume || 0,
         weatherMain: before.weatherMain || 'Clouds',
         weatherDescription: before.weatherDescription || '曇り',
-        weatherIcon: before.weatherIcon || '04d'
+        weatherIcon: before.weatherIcon || '04d',
+        sunriseHour: before.sunriseHour || null,
+        sunsetHour: before.sunsetHour || null
       };
     }
 
@@ -238,7 +240,9 @@ class WeatherService {
       rainVolume: before.rainVolume || 0, // 降雨量もStep補間
       weatherMain: before.weatherMain || 'Clouds',
       weatherDescription: before.weatherDescription || '曇り',
-      weatherIcon: before.weatherIcon || '04d'
+      weatherIcon: before.weatherIcon || '04d',
+      sunriseHour: before.sunriseHour || null, // 日の出時刻（補間しない）
+      sunsetHour: before.sunsetHour || null   // 日没時刻（補間しない）
     };
 
     // NaN チェック: 計算結果が NaN なら before のデータを使用
@@ -254,7 +258,9 @@ class WeatherService {
         rainVolume: before.rainVolume || 0,
         weatherMain: before.weatherMain || 'Clouds',
         weatherDescription: before.weatherDescription || '曇り',
-        weatherIcon: before.weatherIcon || '04d'
+        weatherIcon: before.weatherIcon || '04d',
+        sunriseHour: before.sunriseHour || null,
+        sunsetHour: before.sunsetHour || null
       };
     }
 
@@ -357,7 +363,9 @@ class WeatherService {
         rainVolume: closest.rainVolume || 0,
         weatherMain: closest.weatherMain || 'Clouds',
         weatherDescription: closest.weatherDescription || '曇り',
-        weatherIcon: closest.weatherIcon || '04d'
+        weatherIcon: closest.weatherIcon || '04d',
+        sunriseHour: closest.sunriseHour || null,
+        sunsetHour: closest.sunsetHour || null
       };
     }
 
@@ -373,7 +381,9 @@ class WeatherService {
       rainVolume: 0,
       weatherMain: 'Clouds',
       weatherDescription: '曇り',
-      weatherIcon: '04d'
+      weatherIcon: '04d',
+      sunriseHour: null,
+      sunsetHour: null
     };
   }
 
@@ -438,6 +448,20 @@ class WeatherService {
    * 天気データをフォーマット
    */
   formatWeatherData(data) {
+    // 日の出・日没時刻をUTCから時間（0-23）に変換
+    let sunriseHour = null;
+    let sunsetHour = null;
+
+    if (data.sys?.sunrise && data.sys?.sunset) {
+      // sys.sunrise/sunset は Unix タイムスタンプ(秒)
+      const sunriseDate = new Date(data.sys.sunrise * 1000);
+      const sunsetDate = new Date(data.sys.sunset * 1000);
+
+      // 現地時間（JST）に変換して時間を抽出
+      sunriseHour = sunriseDate.getHours() + (sunriseDate.getMinutes() / 60);
+      sunsetHour = sunsetDate.getHours() + (sunsetDate.getMinutes() / 60);
+    }
+
     return {
       timestamp: data.dt ? new Date(data.dt * 1000) : new Date(),
       temperature: data.main.temp,
@@ -452,7 +476,9 @@ class WeatherService {
       uvi: data.uvi || null,
       weatherMain: data.weather[0].main,
       weatherDescription: data.weather[0].description,
-      weatherIcon: data.weather[0].icon
+      weatherIcon: data.weather[0].icon,
+      sunriseHour: sunriseHour,
+      sunsetHour: sunsetHour
     };
   }
 }

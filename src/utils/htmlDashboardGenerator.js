@@ -1089,7 +1089,7 @@ class HtmlDashboardGenerator {
       <div class="card">
         <h2>☀️ 日照スコア推移</h2>
         <canvas id="illuminationChart"></canvas>
-        <div class="note">💡 日没後（18:00以降）は中立値（70点）</div>
+        <div class="note">💡 日没後（18:00以降）は中立値（50点）。日の出時刻は現地気象データから動的に判定</div>
       </div>
     </div>
 
