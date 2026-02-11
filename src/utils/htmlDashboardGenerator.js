@@ -844,6 +844,7 @@ class HtmlDashboardGenerator {
     const humidityScores = hourlyScores.map(s => s.factorScores.humidity);
     const illuminationScores = hourlyScores.map(s => s.factorScores.illumination);
     const pressureScores = hourlyScores.map(s => s.factorScores.pressure);
+    const pressureDiffScores = hourlyScores.map(s => s.factorScores.pressureDifference);
     const airQualityScores = hourlyScores.map(s => s.factorScores.airQuality);
     const scheduleScores = hourlyScores.map(s => s.factorScores.schedule);
 
@@ -853,6 +854,7 @@ class HtmlDashboardGenerator {
     const humidities = hourlyScores.map(s => s.weatherData?.humidity || 60);
     const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || 50);
     const pressures = hourlyScores.map(s => s.weatherData?.pressure || 1013);
+    const pressureDifferences = hourlyScores.map(s => s.factorScores?.pressureDifference_raw || 0); // 気圧差の元データ
     const aqiValues = hourlyScores.map(() => this.aqi); // AQIは全時間で統一値
 
     // 軸範囲を計算（データに応じて動的調整）
@@ -862,6 +864,7 @@ class HtmlDashboardGenerator {
     const humidityAxisRange = this.calculateDataAxisRange(humidities);
     const cloudAxisRange = this.calculateDataAxisRange(cloudCovers);
     const pressureAxisRange = this.calculateDataAxisRange(pressures);
+    const pressureDiffAxisRange = this.calculateDataAxisRange(pressureDifferences);
 
     // AQI軸の範囲（固定: 0-500）
     const aqiAxisRange = { min: 0, max: Math.ceil(this.aqi / 50) * 50 || 100 };
@@ -1094,9 +1097,17 @@ class HtmlDashboardGenerator {
       <div class="card">
         <h2>🎈 気圧スコア推移</h2>
         <canvas id="pressureChart"></canvas>
-        <div class="note">🌪️ 低気圧（1000hPa未満）で頭がぼーっとする可能性</div>
+        <div class="note">📊 1015hPa以上=100点、990hPaで0点（直線的に低下）</div>
       </div>
 
+      <div class="card">
+        <h2>📉 気圧差（12h）スコア推移</h2>
+        <canvas id="pressureDiffChart"></canvas>
+        <div class="note">⚠️ 過去12時間の気圧差が大きいほどスコアが低下</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
       <div class="card">
         <h2>💨 空気質スコア推移</h2>
         <canvas id="airQualityChart"></canvas>
@@ -1403,6 +1414,57 @@ class HtmlDashboardGenerator {
             min: ${pressureAxisRange.min},
             max: ${pressureAxisRange.max},
             title: { display: true, text: '気圧（hPa）' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    // 気圧差スコアグラフ
+    new Chart(document.getElementById('pressureDiffChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [
+          {
+            label: '気圧差スコア（左軸）',
+            data: ${JSON.stringify(pressureDiffScores)},
+            borderColor: 'rgb(76, 175, 80)',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          },
+          {
+            label: '実気圧差hPa（右軸）',
+            data: ${JSON.stringify(pressureDifferences)},
+            borderColor: 'rgb(244, 67, 54)',
+            backgroundColor: 'rgba(244, 67, 54, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: ${pressureDiffAxisRange.min},
+            max: ${pressureDiffAxisRange.max},
+            title: { display: true, text: '気圧差（hPa）' },
             grid: { drawOnChartArea: false }
           }
         }

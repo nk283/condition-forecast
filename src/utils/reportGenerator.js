@@ -209,14 +209,15 @@ class ReportGenerator {
     // 気圧の根拠
     const pressureScore = Math.round(factorScores.pressure);
     if (pressureScore === 100) {
-      reasoning.push(`• 気圧: ${weatherData.pressure} hPaは最適範囲(1010-1015 hPa)のため100点`);
-    } else if (pressureScore >= 80) {
-      reasoning.push(`• 気圧: ${weatherData.pressure} hPaは許容範囲(990-1030 hPa)のため${pressureScore}点`);
+      reasoning.push(`• 気圧: ${weatherData.pressure} hPaは1015 hPa以上のため100点（快適）`);
     } else {
-      const pressureMsg = weatherData.pressure < 990
-        ? `${weatherData.pressure} hPaは低気圧`
-        : `${weatherData.pressure} hPaは高気圧`;
-      reasoning.push(`• 気圧: ${pressureMsg}のため${pressureScore}点`);
+      // 1015 hPaから990 hPaへ直線的に低下（25 hPa差で100点低下）
+      // スコア = 100 - (1015 - 実際の気圧) * 4
+      const diff = 1015 - weatherData.pressure;
+      const reason = diff >= 0
+        ? `${weatherData.pressure} hPaは1015 hPaより${diff}低いため`
+        : `${weatherData.pressure} hPaは基準より高いため`;
+      reasoning.push(`• 気圧: ${reason}${pressureScore}点`);
     }
 
     // スケジュールの根拠

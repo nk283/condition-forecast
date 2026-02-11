@@ -99,29 +99,27 @@ class ConditionScoreEngine {
    * 日照スコアを計算
    * 日中の照度が低いと頭がぼーっとする
    * cloudCoverage: 雲量（0～100%、0=快晴、100=曇天）
+   *
+   * 【スコア計算ルール】
+   * 雲量と日照スコアは逆比例
+   * - 雲量 0% → スコア 100点（快晴）
+   * - 雲量 50% → スコア 50点（半曇り）
+   * - 雲量 100% → スコア 0点（完全曇天）
+   *
+   * 計算式: スコア = 100 - 雲量(%)
+   *
+   * 夜間は日照の影響を受けないため常に50点（中立値）
    */
   calculateIlluminationScore(cloudCoverage, hour) {
-    // 夜間（21時～5時）は日照スコアを適用しない
+    // 夜間（21時～5時）は日照スコアを適用しない（常に中立値50点）
     if (hour >= 21 || hour < 5) {
-      return 100;
+      return 50;
     }
 
-    // 雲量ベースのスコア計算
-    // 雲量が少ない（晴れ）→ スコア高
-    // 雲量が多い（曇り）→ スコア低
-    if (cloudCoverage <= 20) {
-      return 100; // 快晴
-    }
-    if (cloudCoverage <= 40) {
-      return 90; // 晴れ
-    }
-    if (cloudCoverage <= 60) {
-      return 70; // 曇り
-    }
-    if (cloudCoverage <= 80) {
-      return 50; // 曇天
-    }
-    return 40; // 厚い雲
+    // 日中：雲量とスコアが逆比例
+    // スコア = 100 - 雲量(%)
+    const score = 100 - cloudCoverage;
+    return Math.max(0, Math.round(score));
   }
 
   /**
@@ -147,90 +145,71 @@ class ConditionScoreEngine {
   }
 
   /**
-   * 気圧スコアを計算
+   * 気圧スコアを計算（絶対値ベース）
    *
    * 【気圧と体調の関係】
-   * 気圧の変化は気象変動を伴う場合が多く、以下のパターンで体調に影響：
+   * 低気圧では血管拡張、気分低下、頭痛などが増加
+   * 1015 hPa以上は快適で、下がるごとに体調が悪化
    *
-   * ★低気圧（990 hPa未満）:
-   *  - 血管拡張、気分が落ち込む
-   *  - 関節痛、頭痛、めまいが増加
-   *  - スコア: 低い（20-40点）
+   * 【スコア計算式】
+   * - 1015 hPa以上 → 100点（1025, 1030でも100点）
+   * - 1015 hPaから990 hPaへ直線的に低下
+   * - 990 hPa以下 → 0点
    *
-   * ★標準気圧付近（1010-1020 hPa）:
-   *  - 体調が安定、快適
-   *  - 最高のコンディション
-   *  - スコア: 100点
+   * 計算式: max(0, 100 * (1015 - pressure) / 25)
+   * ※ 990 = 1015 - 25 のため
    *
-   * ★高気圧（1025 hPa超）:
-   *  - 血管収縮、不安感
-   *  - 体が重い、気分が鬱っぽい
-   *  - スコア: 低い（30-60点）
-   *
-   * 【スコア計算式と具体例】
-   * - 1010-1020 hPa → 100点（標準気圧、快適）
-   * - 1000-1010 hPa → 100-80点（わずかな低気圧）
-   * - 1020-1030 hPa → 100-50点（わずかな高気圧）
-   * - 990-1000 hPa → 80-40点（低気圧の影響が顕著）
-   * - 1030-1040 hPa → 50-30点（高気圧の影響が顕著）
-   * - <990 hPa → <40点（強い低気圧で体調悪化）
-   * - >1040 hPa → <30点（強い高気圧で体が重い）
+   * 【具体例】
+   * - 1015 hPa → 100点（基準点、快適）
+   * - 1010 hPa → 80点
+   * - 1005 hPa → 60点
+   * - 1000 hPa → 40点
+   * - 995 hPa → 20点
+   * - 990 hPa → 0点（下限）
+   * - 985 hPa → 0点（0点以下は切り上げ）
    */
   calculatePressureScore(pressure) {
-    // 最適範囲: 1010-1020 hPa
-    if (pressure >= 1010 && pressure <= 1020) {
+    // 1015 hPa以上は常に100点
+    if (pressure >= 1015) {
       return 100;
     }
 
-    // わずかな低気圧（下限）: 1000-1010 hPa
-    if (pressure >= 1000 && pressure < 1010) {
-      // 1010→100点、1000→80点へ線形変化
-      return Math.round(100 - (1010 - pressure) / 10 * 20);
+    // 1015 hPaから990 hPaへ直線的に低下（25 hPaで100点低下）
+    // スコア = 100 * (1015 - 実際の気圧) / 25
+    const score = 100 - (1015 - pressure) * 4; // (1015 - pressure) / 25 * 100 = (1015 - pressure) * 4
+
+    return Math.max(0, Math.round(score));
+  }
+
+  /**
+   * 気圧差スコアを計算（過去12時間）
+   *
+   * 【気圧変動と体調の関係】
+   * 気圧が急激に変わると体調が悪くなる
+   * 気圧差が大きいほどスコアが低い
+   *
+   * 【スコア計算ルール】
+   * - 気圧差 0 hPa → 100点（変化なし、快適）
+   * - 気圧差 5 hPa → 100点（許容範囲）
+   * - 気圧差 10 hPa → 80点
+   * - 気圧差 15 hPa → 60点
+   * - 気圧差 20 hPa → 40点
+   * - 気圧差 25 hPa以上 → 0点
+   *
+   * 計算式: max(0, 100 - (差 - 5) * 4)
+   * ※ 5 hPa以下は減点なし、それ以降は5 hPaあたり20点減点
+   */
+  calculatePressureDifferenceScore(pressureDifference) {
+    // 5 hPa以下は影響なし
+    if (pressureDifference <= 5) {
+      return 100;
     }
 
-    // わずかな高気圧（上限）: 1020-1030 hPa
-    if (pressure > 1020 && pressure <= 1030) {
-      // 1020→100点、1030→50点へ線形変化
-      return Math.round(100 - (pressure - 1020) / 10 * 50);
-    }
+    // 5 hPaを超える部分で減点
+    // 1 hPaあたり4点減点（20 hPa余分で80点減点）
+    const score = 100 - (pressureDifference - 5) * 4;
 
-    // 顕著な低気圧: 990-1000 hPa
-    if (pressure >= 990 && pressure < 1000) {
-      // 1000→80点、990→40点へ線形変化
-      return Math.round(80 - (1000 - pressure) / 10 * 40);
-    }
-
-    // 顕著な高気圧: 1030-1040 hPa
-    if (pressure > 1030 && pressure <= 1040) {
-      // 1030→50点、1040→30点へ線形変化
-      return Math.round(50 - (pressure - 1030) / 10 * 20);
-    }
-
-    // 強い低気圧: 980-990 hPa
-    if (pressure >= 980 && pressure < 990) {
-      // 990→40点、980→20点へ線形変化
-      return Math.round(40 - (990 - pressure) / 10 * 20);
-    }
-
-    // 強い高気圧: 1040-1050 hPa
-    if (pressure > 1040 && pressure <= 1050) {
-      // 1040→30点、1050→15点へ線形変化
-      return Math.round(30 - (pressure - 1040) / 10 * 15);
-    }
-
-    // 極端な低気圧: 980 hPa未満
-    if (pressure < 980) {
-      const extremeLow = Math.max(10, 20 - (980 - pressure) * 2);
-      return Math.round(extremeLow);
-    }
-
-    // 極端な高気圧: 1050 hPa超
-    if (pressure > 1050) {
-      const extremeHigh = Math.max(10, 15 - (pressure - 1050) * 2);
-      return Math.round(extremeHigh);
-    }
-
-    return 70;
+    return Math.max(0, Math.round(score));
   }
 
   /**
@@ -339,10 +318,11 @@ class ConditionScoreEngine {
     for (let i = 0; i < hourlyData.length; i++) {
       const data = hourlyData[i];
 
-      // 過去12時間の気温データを取得（ i-12 ～ i-1）
+      // 過去12時間の気温データと気圧データを取得（ i-12 ～ i）
       const past12hStart = Math.max(0, i - 12);
       const past12h = hourlyData.slice(past12hStart, i + 1);
       const tempDiff12h = this.calculateTempDiff12h(past12h);
+      const pressureDiff12h = this.calculatePressureDiff12h(past12h);
 
       // 各要因のスコア計算
       const scores = {
@@ -352,10 +332,12 @@ class ConditionScoreEngine {
         illumination: this.calculateSunshineScoreHourly(data.cloudiness, data.hour),
         airQuality: this.calculateAirQualityScore(aqi, false), // 屋内判定は常にfalse（屋外活動を想定）
         pressure: this.calculatePressureScore(data.pressure),
+        pressureDifference: this.calculatePressureDifferenceScore(pressureDiff12h),
         schedule: this.calculateScheduleScoreHourly(data.timestamp, scheduleData)
       };
 
       // 総合スコア計算（新しい重み配分）
+      // 注: 気圧差は新規追加だが、重みはまだ定義されていないため、今は計算に含めない
       const totalScore =
         scores.temperature * this.weights.temperature +
         scores.temperatureDiff12h * this.weights.temperatureDiff12h +
@@ -379,7 +361,8 @@ class ConditionScoreEngine {
           windSpeed: data.windSpeed,
           weatherDescription: data.weatherDescription
         },
-        tempDiff12h: Math.round(tempDiff12h * 10) / 10
+        tempDiff12h: Math.round(tempDiff12h * 10) / 10,
+        pressureDiff12h: Math.round(pressureDiff12h * 10) / 10
       });
     }
 
@@ -418,24 +401,46 @@ class ConditionScoreEngine {
   }
 
   /**
+   * 過去12時間の気圧差を計算
+   */
+  calculatePressureDiff12h(past12hData) {
+    if (past12hData.length === 0) return 0;
+
+    const pressures = past12hData.map(d => d.pressure).filter(p => typeof p === 'number' && !isNaN(p));
+    if (pressures.length === 0) return 0;
+
+    const maxPressure = Math.max(...pressures);
+    const minPressure = Math.min(...pressures);
+
+    return maxPressure - minPressure;
+  }
+
+  /**
    * 日照スコア（日没後対応版）
    * 日中（6:00-18:00）のみ、日没後は中立値を返す
+   *
+   * 【スコア計算ルール】
+   * 雲量と日照スコアは逆比例
+   * - 雲量 0% → スコア 100点（快晴）
+   * - 雲量 50% → スコア 50点（半曇り）
+   * - 雲量 100% → スコア 0点（完全曇天）
+   *
+   * 計算式: スコア = 100 - 雲量(%)
+   * 夜間は常に50点（中立値）
    */
   calculateSunshineScoreHourly(cloudCoverage, hour) {
-    const sunrise = 6;
-    const sunset = 18;
+    const sunrise = 5;
+    const sunset = 21;
 
-    // 日中（6:00-18:00）以外は夜間扱い
-    if (hour < sunrise || hour >= sunset) {
-      return 70; // 夜間は日照の影響なし（中立値）
+    // 夜間（21時～5時）は中立値50点
+    if (hour >= sunset || hour < sunrise) {
+      return 50;
     }
 
-    // 日中は雲量ベースでスコア計算
-    if (cloudCoverage <= 20) return 100; // 快晴
-    if (cloudCoverage <= 40) return 90;  // 晴れ
-    if (cloudCoverage <= 60) return 70;  // 曇り
-    if (cloudCoverage <= 80) return 50;  // 曇天
-    return 40;                            // 厚い雲
+    // 日中：雲量とスコアが逆比例
+    // スコア = 100 - 雲量(%)
+    const score = 100 - cloudCoverage;
+    return Math.max(0, Math.round(score));
   }
 
   /**
