@@ -220,8 +220,8 @@ class WeatherService {
         weatherMain: before.weatherMain || 'Clouds',
         weatherDescription: before.weatherDescription || '曇り',
         weatherIcon: before.weatherIcon || '04d',
-        sunriseHour: before.sunriseHour || null,
-        sunsetHour: before.sunsetHour || null
+        sunriseHour: before.sunriseHour !== null && before.sunriseHour !== undefined ? before.sunriseHour : 6,
+        sunsetHour: before.sunsetHour !== null && before.sunsetHour !== undefined ? before.sunsetHour : 18
       };
     }
 
@@ -241,8 +241,8 @@ class WeatherService {
       weatherMain: before.weatherMain || 'Clouds',
       weatherDescription: before.weatherDescription || '曇り',
       weatherIcon: before.weatherIcon || '04d',
-      sunriseHour: before.sunriseHour || null, // 日の出時刻（補間しない）
-      sunsetHour: before.sunsetHour || null   // 日没時刻（補間しない）
+      sunriseHour: before.sunriseHour !== null && before.sunriseHour !== undefined ? before.sunriseHour : 6, // 日の出時刻（デフォルト: 6時）
+      sunsetHour: before.sunsetHour !== null && before.sunsetHour !== undefined ? before.sunsetHour : 18   // 日没時刻（デフォルト: 18時）
     };
 
     // NaN チェック: 計算結果が NaN なら before のデータを使用
@@ -259,8 +259,8 @@ class WeatherService {
         weatherMain: before.weatherMain || 'Clouds',
         weatherDescription: before.weatherDescription || '曇り',
         weatherIcon: before.weatherIcon || '04d',
-        sunriseHour: before.sunriseHour || null,
-        sunsetHour: before.sunsetHour || null
+        sunriseHour: before.sunriseHour !== null && before.sunriseHour !== undefined ? before.sunriseHour : 6,
+        sunsetHour: before.sunsetHour !== null && before.sunsetHour !== undefined ? before.sunsetHour : 18
       };
     }
 
@@ -364,8 +364,8 @@ class WeatherService {
         weatherMain: closest.weatherMain || 'Clouds',
         weatherDescription: closest.weatherDescription || '曇り',
         weatherIcon: closest.weatherIcon || '04d',
-        sunriseHour: closest.sunriseHour || null,
-        sunsetHour: closest.sunsetHour || null
+        sunriseHour: closest.sunriseHour !== null && closest.sunriseHour !== undefined ? closest.sunriseHour : 6,
+        sunsetHour: closest.sunsetHour !== null && closest.sunsetHour !== undefined ? closest.sunsetHour : 18
       };
     }
 
@@ -382,8 +382,8 @@ class WeatherService {
       weatherMain: 'Clouds',
       weatherDescription: '曇り',
       weatherIcon: '04d',
-      sunriseHour: null,
-      sunsetHour: null
+      sunriseHour: 6,
+      sunsetHour: 18
     };
   }
 
