@@ -509,6 +509,12 @@
         responsive: true,
         maintainAspectRatio: true,
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             min: 50,
             max: 100
@@ -551,6 +557,12 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -603,6 +615,12 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -655,6 +673,12 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -707,6 +731,12 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -759,6 +789,12 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -811,6 +847,12 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -870,6 +912,12 @@
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -907,7 +955,15 @@
       },
       options: {
         responsive: true,
-        scales: { y: { min: 0, max: 100 } }
+        scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
+          y: { min: 0, max: 100 }
+        }
       },
       plugins: [verticalLinePlugin]
     });

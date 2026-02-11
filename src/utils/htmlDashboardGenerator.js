@@ -1238,6 +1238,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         maintainAspectRatio: true,
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             min: ${scoreAxisRange.min},
             max: ${scoreAxisRange.max}
@@ -1280,6 +1286,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -1332,6 +1344,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -1384,6 +1402,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -1436,6 +1460,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -1488,6 +1518,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -1540,6 +1576,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -1599,6 +1641,12 @@ class HtmlDashboardGenerator {
         responsive: true,
         interaction: { mode: 'index', intersect: false },
         scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
           y: {
             type: 'linear',
             display: true,
@@ -1636,7 +1684,15 @@ class HtmlDashboardGenerator {
       },
       options: {
         responsive: true,
-        scales: { y: { min: 0, max: 100 } }
+        scales: {
+          x: {
+            ticks: {
+              maxRotation: 45,
+              minRotation: 45
+            }
+          },
+          y: { min: 0, max: 100 }
+        }
       },
       plugins: [verticalLinePlugin]
     });
