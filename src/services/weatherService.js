@@ -128,41 +128,17 @@ class WeatherService {
       startTime.setHours(0, 0, 0, 0);
       startTime.setDate(startTime.getDate() - 1); // 昨日に設定
 
-      // 現在時刻（APIの切り替え境界）
-      const nowStartOfHour = new Date(now);
-      nowStartOfHour.setMinutes(0, 0, 0);
-
       const hourlyData = [];
-
-      // 【前回実行時のデータを活用】過去ファイルから重複データを取得
-      const previousWeatherData = this.dataStorage.getOverlappingWeatherData(startTime);
-
-      console.log(`📊 過去ファイルから ${Object.keys(previousWeatherData).length} 件のデータを取得`);
 
       // 1時間刻みの配列を生成（72時間分）
       // 昨日00:00 ～ 明日23:00（72時間）
+      // 【重要】常に補間を使用して1時間刻みを生成（過去ファイルに依存しない）
       for (let i = 0; i < 72; i++) {
         const targetTime = new Date(startTime.getTime() + i * 60 * 60 * 1000);
         const localDateTime = this.formatLocalDateTime(targetTime);
 
-        let weatherData;
-
-        // *** 改善版3段階のロジック ***
-        // 優先度: 新規予報 > 過去ファイル > null（データなし）
-        if (targetTime >= nowStartOfHour) {
-          // 【優先1】現在時刻以降のデータは、APIの予報データから補間（最新かつ正確）
-          weatherData = this.interpolateWeatherData(forecast3h, targetTime);
-          // console.log(`  🔮 ${localDateTime}: 新規予報データから補間`);
-        } else if (previousWeatherData[localDateTime]) {
-          // 【優先2】現在時刻より過去で、過去ファイルに存在するデータを使用
-          weatherData = previousWeatherData[localDateTime];
-          // console.log(`  📂 ${localDateTime}: 過去ファイルから復元`);
-        } else {
-          // 【優先3】現在時刻より過去で、過去ファイルにもないデータ
-          // データが存在しないため null を設定（仮のデータは当てはめない）
-          weatherData = null;
-          // console.log(`  ❌ ${localDateTime}: データなし`);
-        }
+        // 常に補間で1時間刻みを生成（3時間ごとのループを防止）
+        const weatherData = this.interpolateWeatherData(forecast3h, targetTime);
 
         hourlyData.push({
           timestamp: localDateTime,
