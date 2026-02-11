@@ -406,7 +406,8 @@ class DataStorage {
       const weatherMap = {};
 
       scores.forEach(score => {
-        if (score.weatherData && score.timestamp) {
+        if (score.timestamp) {
+          // weatherData が null でも含める（復元が目的）
           weatherMap[score.timestamp] = score.weatherData;
         }
       });

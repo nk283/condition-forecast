@@ -121,6 +121,7 @@ class WeatherService {
   async getHourlyForecast72h() {
     try {
       const forecast3h = await this.getForecast();
+      console.log(`📊 API から取得した3時間刻みデータ: ${forecast3h.length}件`);
       const now = new Date();
 
       // 昨日の00:00:00をローカルタイムで設定
@@ -129,27 +130,46 @@ class WeatherService {
       startTime.setDate(startTime.getDate() - 1); // 昨日に設定
 
       const hourlyData = [];
+      let validCount = 0;
+      let nullCount = 0;
 
       // 1時間刻みの配列を生成（72時間分）
       // 昨日00:00 ～ 明日23:00（72時間）
-      // 【重要】常に補間を使用して1時間刻みを生成（過去ファイルに依存しない）
       for (let i = 0; i < 72; i++) {
         const targetTime = new Date(startTime.getTime() + i * 60 * 60 * 1000);
         const localDateTime = this.formatLocalDateTime(targetTime);
 
-        // 常に補間で1時間刻みを生成（3時間ごとのループを防止）
-        const weatherData = this.interpolateWeatherData(forecast3h, targetTime);
+        // 最も近いAPIデータを使用（3時間のStep補間）
+        let weatherData = null;
+        let closestDiff = Infinity;
+        let closest = null;
+
+        forecast3h.forEach(apiData => {
+          const diff = Math.abs(apiData.timestamp.getTime() - targetTime.getTime());
+          if (diff < closestDiff) {
+            closestDiff = diff;
+            closest = apiData;
+          }
+        });
+
+        // 最も近いデータを使用（3時間以内なら有効と判断）
+        if (closest && closestDiff <= 3 * 60 * 60 * 1000) {
+          weatherData = closest;
+        }
+
+        if (weatherData) validCount++;
+        else nullCount++;
 
         hourlyData.push({
           timestamp: localDateTime,
           hour: targetTime.getHours(),
           date: targetTime.toLocaleDateString('ja-JP'),
           dateObj: targetTime,
-          ...weatherData  // null の場合は何も追加されない
+          ...(weatherData || {})  // 型を統一
         });
       }
 
-      console.log(`✅ 72時間の1時間刻みデータを生成しました (${hourlyData.length}件)`);
+      console.log(`✅ 72時間の1時間刻みデータを生成しました (${hourlyData.length}件: 有効${validCount}件, null${nullCount}件)`);
       return hourlyData;
     } catch (error) {
       console.error('72時間データ取得エラー:', error.message);
@@ -174,8 +194,26 @@ class WeatherService {
     const after = this.findClosestAfter(forecast3h, targetTime);
 
     if (!before || !after) {
-      // 範囲外の場合: null を返す（仮のデータを返さない）
-      return null;
+      // 範囲外の場合: 最も近いデータを使用（Step補間）
+      const closest = before || after;
+      if (!closest) {
+        return null;
+      }
+      return {
+        temperature: closest.temperature,
+        humidity: closest.humidity,
+        pressure: closest.pressure,
+        cloudiness: closest.cloudiness,
+        windSpeed: closest.windSpeed,
+        feelsLike: closest.feelsLike,
+        visibility: closest.visibility,
+        rainVolume: closest.rainVolume,
+        weatherMain: closest.weatherMain,
+        weatherDescription: closest.weatherDescription,
+        weatherIcon: closest.weatherIcon,
+        sunriseHour: closest.sunriseHour !== null && closest.sunriseHour !== undefined ? closest.sunriseHour : 6,
+        sunsetHour: closest.sunsetHour !== null && closest.sunsetHour !== undefined ? closest.sunsetHour : 18
+      };
     }
 
     // 線形補間比率を計算
