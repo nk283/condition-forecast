@@ -179,6 +179,20 @@
 
     <div class="grid-2">
       <div class="card">
+        <h2>🎈 気圧スコア推移</h2>
+        <canvas id="pressureChart"></canvas>
+        <div class="note">🌪️ 低気圧（1000hPa未満）で頭がぼーっとする可能性</div>
+      </div>
+
+      <div class="card">
+        <h2>💨 空気質スコア推移</h2>
+        <canvas id="airQualityChart"></canvas>
+        <div class="note">⚠️ AQI 50以下=良好、100以上=中程度、150以上=不健康</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
         <h2>📅 予定スコア推移</h2>
         <canvas id="scheduleChart"></canvas>
         <div class="note">📍 予定あり=0点、なし=100点</div>
@@ -190,723 +204,723 @@
       <div class="note">表をスクロールして詳細をご確認ください</div>
       <table class="hourly-table"><thead><tr><th>時刻</th><th>総合</th><th>気温</th><th>気温差12h</th><th>湿度</th><th>日照</th><th>気圧</th><th>空気質</th><th>予定</th></tr></thead><tbody><tr >
         <td>2/10 00:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 01:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 02:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 03:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 04:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 05:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 06:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 07:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 08:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 09:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 10:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 11:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 12:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 13:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 14:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 15:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 16:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 17:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 18:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>74</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 19:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">89</td>
         <td>100</td>
         <td>100</td>
         <td>69</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 20:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">83</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">88</td>
         <td>100</td>
         <td>100</td>
         <td>63</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 21:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
         <td>100</td>
         <td>100</td>
         <td>58</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 22:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">81</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">86</td>
         <td>100</td>
         <td>100</td>
         <td>52</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/10 23:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">80</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
         <td>100</td>
         <td>100</td>
         <td>46</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 00:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">80</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
         <td>100</td>
         <td>100</td>
         <td>40</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 01:00</td>
-        <td style="background-color: rgb(255, 193, 7); color: white; font-weight: bold;">79</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
         <td>100</td>
         <td>100</td>
         <td>37</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 02:00</td>
-        <td style="background-color: rgb(255, 193, 7); color: white; font-weight: bold;">79</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
         <td>100</td>
         <td>100</td>
         <td>33</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 03:00</td>
-        <td style="background-color: rgb(255, 193, 7); color: white; font-weight: bold;">78</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">83</td>
         <td>100</td>
         <td>100</td>
         <td>30</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 04:00</td>
-        <td style="background-color: rgb(255, 193, 7); color: white; font-weight: bold;">79</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
         <td>100</td>
         <td>100</td>
         <td>35</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 05:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">80</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
         <td>100</td>
         <td>100</td>
         <td>41</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 06:00</td>
-        <td style="background-color: rgb(255, 193, 7); color: white; font-weight: bold;">76</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">81</td>
         <td>100</td>
         <td>100</td>
         <td>46</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 07:00</td>
-        <td style="background-color: rgb(255, 193, 7); color: white; font-weight: bold;">77</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">82</td>
         <td>100</td>
         <td>100</td>
         <td>56</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 08:00</td>
-        <td style="background-color: rgb(255, 193, 7); color: white; font-weight: bold;">79</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
         <td>100</td>
         <td>100</td>
         <td>66</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 09:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">80</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
         <td>100</td>
         <td>100</td>
         <td>76</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 10:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">80</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
         <td>100</td>
         <td>100</td>
         <td>76</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr class="current-hour">
         <td>2/11 11:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">89</td>
         <td>100</td>
         <td>100</td>
         <td>88</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 12:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">89</td>
         <td>100</td>
         <td>100</td>
         <td>88</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 13:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">89</td>
         <td>100</td>
         <td>100</td>
         <td>91</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 14:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>93</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 15:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>96</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 16:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>95</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 17:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>93</td>
         <td>50</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 18:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
         <td>100</td>
         <td>100</td>
         <td>92</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 19:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
         <td>100</td>
         <td>100</td>
         <td>90</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 20:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
         <td>100</td>
         <td>100</td>
         <td>88</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 21:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">86</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">91</td>
         <td>100</td>
         <td>100</td>
         <td>86</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 22:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">86</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">91</td>
         <td>100</td>
         <td>100</td>
         <td>83</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/11 23:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">86</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">91</td>
         <td>100</td>
         <td>100</td>
         <td>81</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 00:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>78</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 01:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>78</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 02:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>78</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 03:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>78</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 04:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">90</td>
         <td>100</td>
         <td>100</td>
         <td>75</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 05:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">84</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">89</td>
         <td>100</td>
         <td>100</td>
         <td>73</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 06:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">80</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
         <td>100</td>
         <td>100</td>
         <td>70</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 07:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">80</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">85</td>
         <td>100</td>
         <td>100</td>
         <td>76</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 08:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">81</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">86</td>
         <td>100</td>
         <td>100</td>
         <td>82</td>
         <td>40</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 09:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
         <td>100</td>
         <td>100</td>
         <td>88</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 10:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">89</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">94</td>
         <td>100</td>
         <td>100</td>
         <td>100</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 11:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">88</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">93</td>
         <td>98</td>
         <td>100</td>
         <td>100</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 12:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">97</td>
         <td>94</td>
         <td>94</td>
         <td>100</td>
         <td>100</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 13:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">97</td>
         <td>94</td>
         <td>94</td>
         <td>100</td>
         <td>100</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 14:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">91</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">96</td>
         <td>94</td>
         <td>94</td>
         <td>100</td>
         <td>100</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 15:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">91</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">96</td>
         <td>94</td>
         <td>93</td>
         <td>100</td>
         <td>100</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 16:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">97</td>
         <td>97</td>
         <td>93</td>
         <td>100</td>
         <td>100</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 17:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">97</td>
         <td>100</td>
         <td>93</td>
         <td>100</td>
         <td>100</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 18:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">88</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">93</td>
         <td>100</td>
         <td>93</td>
         <td>100</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 19:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">88</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">93</td>
         <td>100</td>
         <td>100</td>
         <td>98</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 20:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">88</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">93</td>
         <td>100</td>
         <td>100</td>
         <td>94</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 21:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
         <td>100</td>
         <td>100</td>
         <td>90</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 22:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
         <td>100</td>
         <td>100</td>
         <td>91</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr><tr >
         <td>2/12 23:00</td>
-        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">87</td>
+        <td style="background-color: rgb(76, 175, 80); color: white; font-weight: bold;">92</td>
         <td>100</td>
         <td>100</td>
         <td>91</td>
         <td>70</td>
         <td>80</td>
-        <td>50</td>
+        <td>100</td>
         <td>✓</td>
       </tr></tbody></table>
     </div>
@@ -920,7 +934,7 @@
         labels: ["2/10 00:00","2/10 01:00","2/10 02:00","2/10 03:00","2/10 04:00","2/10 05:00","2/10 06:00","2/10 07:00","2/10 08:00","2/10 09:00","2/10 10:00","2/10 11:00","2/10 12:00","2/10 13:00","2/10 14:00","2/10 15:00","2/10 16:00","2/10 17:00","2/10 18:00","2/10 19:00","2/10 20:00","2/10 21:00","2/10 22:00","2/10 23:00","2/11 00:00","2/11 01:00","2/11 02:00","2/11 03:00","2/11 04:00","2/11 05:00","2/11 06:00","2/11 07:00","2/11 08:00","2/11 09:00","2/11 10:00","2/11 11:00","2/11 12:00","2/11 13:00","2/11 14:00","2/11 15:00","2/11 16:00","2/11 17:00","2/11 18:00","2/11 19:00","2/11 20:00","2/11 21:00","2/11 22:00","2/11 23:00","2/12 00:00","2/12 01:00","2/12 02:00","2/12 03:00","2/12 04:00","2/12 05:00","2/12 06:00","2/12 07:00","2/12 08:00","2/12 09:00","2/12 10:00","2/12 11:00","2/12 12:00","2/12 13:00","2/12 14:00","2/12 15:00","2/12 16:00","2/12 17:00","2/12 18:00","2/12 19:00","2/12 20:00","2/12 21:00","2/12 22:00","2/12 23:00"],
         datasets: [{
           label: '総合スコア',
-          data: [85,85,85,85,85,85,82,82,82,82,82,82,82,82,82,82,82,82,85,84,83,82,81,80,80,79,79,78,79,80,76,77,79,80,80,84,84,84,85,85,85,85,87,87,87,86,86,86,85,85,85,85,85,84,80,80,81,87,89,88,92,92,91,91,92,92,88,88,88,87,87,87],
+          data: [90,90,90,90,90,90,87,87,87,87,87,87,87,87,87,87,87,87,90,89,88,87,86,85,85,84,84,83,84,85,81,82,84,85,85,89,89,89,90,90,90,90,92,92,92,91,91,91,90,90,90,90,90,89,85,85,86,92,94,93,97,97,96,96,97,97,93,93,93,92,92,92],
           borderColor: 'rgb(102, 126, 234)',
           backgroundColor: 'rgba(102, 126, 234, 0.1)',
           fill: true,
@@ -1146,6 +1160,90 @@
             max: 100,
             title: { display: true, text: '雲量（%）' },
             grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    // 気圧スコアグラフ
+    new Chart(document.getElementById('pressureChart'), {
+      type: 'line',
+      data: {
+        labels: ["2/10 00:00","2/10 01:00","2/10 02:00","2/10 03:00","2/10 04:00","2/10 05:00","2/10 06:00","2/10 07:00","2/10 08:00","2/10 09:00","2/10 10:00","2/10 11:00","2/10 12:00","2/10 13:00","2/10 14:00","2/10 15:00","2/10 16:00","2/10 17:00","2/10 18:00","2/10 19:00","2/10 20:00","2/10 21:00","2/10 22:00","2/10 23:00","2/11 00:00","2/11 01:00","2/11 02:00","2/11 03:00","2/11 04:00","2/11 05:00","2/11 06:00","2/11 07:00","2/11 08:00","2/11 09:00","2/11 10:00","2/11 11:00","2/11 12:00","2/11 13:00","2/11 14:00","2/11 15:00","2/11 16:00","2/11 17:00","2/11 18:00","2/11 19:00","2/11 20:00","2/11 21:00","2/11 22:00","2/11 23:00","2/12 00:00","2/12 01:00","2/12 02:00","2/12 03:00","2/12 04:00","2/12 05:00","2/12 06:00","2/12 07:00","2/12 08:00","2/12 09:00","2/12 10:00","2/12 11:00","2/12 12:00","2/12 13:00","2/12 14:00","2/12 15:00","2/12 16:00","2/12 17:00","2/12 18:00","2/12 19:00","2/12 20:00","2/12 21:00","2/12 22:00","2/12 23:00"],
+        datasets: [
+          {
+            label: '気圧スコア（左軸）',
+            data: [80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80,80],
+            borderColor: 'rgb(76, 175, 80)',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          },
+          {
+            label: '実気圧hPa（右軸）',
+            data: [1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1019,1018.3333333333334,1017.6666666666667,1017,1016.6666666666667,1016.3333333333333,1016,1016,1016,1016,1016.6666666666667,1017.3333333333333,1018,1018,1019,1019,1019,1019,1019,1019.3333333333334,1019.6666666666667,1020,1020.3333333333335,1020.6666666666667,1021,1020.6666666666667,1020.3333333333334,1020,1020.0000000000001,1020,1020,1020.3333333333335,1020.6666666666667,1021,1021.3333333333334,1021.6666666666666,1022,1022,1022,1022,1021.6666666666667,1021.3333333333333,1021,1021.3333333333334,1021.6666666666666,1022,1022.3333333333334,1022.6666666666667,1023,1022.6666666666667,1022.3333333333333],
+            borderColor: 'rgb(33, 150, 243)',
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: 1015,
+            max: 1025,
+            title: { display: true, text: '気圧（hPa）' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    // 空気質スコアグラフ
+    new Chart(document.getElementById('airQualityChart'), {
+      type: 'line',
+      data: {
+        labels: ["2/10 00:00","2/10 01:00","2/10 02:00","2/10 03:00","2/10 04:00","2/10 05:00","2/10 06:00","2/10 07:00","2/10 08:00","2/10 09:00","2/10 10:00","2/10 11:00","2/10 12:00","2/10 13:00","2/10 14:00","2/10 15:00","2/10 16:00","2/10 17:00","2/10 18:00","2/10 19:00","2/10 20:00","2/10 21:00","2/10 22:00","2/10 23:00","2/11 00:00","2/11 01:00","2/11 02:00","2/11 03:00","2/11 04:00","2/11 05:00","2/11 06:00","2/11 07:00","2/11 08:00","2/11 09:00","2/11 10:00","2/11 11:00","2/11 12:00","2/11 13:00","2/11 14:00","2/11 15:00","2/11 16:00","2/11 17:00","2/11 18:00","2/11 19:00","2/11 20:00","2/11 21:00","2/11 22:00","2/11 23:00","2/12 00:00","2/12 01:00","2/12 02:00","2/12 03:00","2/12 04:00","2/12 05:00","2/12 06:00","2/12 07:00","2/12 08:00","2/12 09:00","2/12 10:00","2/12 11:00","2/12 12:00","2/12 13:00","2/12 14:00","2/12 15:00","2/12 16:00","2/12 17:00","2/12 18:00","2/12 19:00","2/12 20:00","2/12 21:00","2/12 22:00","2/12 23:00"],
+        datasets: [{
+          label: '空気質スコア',
+          data: [100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100,100],
+          borderColor: 'rgb(156, 39, 176)',
+          backgroundColor: 'rgba(156, 39, 176, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: function(context) {
+            const value = context.parsed.y;
+            if (value >= 80) return 'rgb(76, 175, 80)';
+            if (value >= 60) return 'rgb(255, 193, 7)';
+            if (value >= 40) return 'rgb(255, 152, 0)';
+            return 'rgb(244, 67, 54)';
+          }
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
           }
         }
       }

@@ -74,19 +74,26 @@ class WeatherService {
   }
 
   /**
-   * 空気質指数（AQI）を取得
+   * 空気質指数（AQI）を取得（World Air Quality Index APIを使用）
+   * 無料で利用可能な最新のAQIデータを取得
    */
   async getAQI() {
     try {
-      const response = await axios.get('https://api.waqi.info/feed/geo:37.7749;-122.4194', {
+      // WAQI API: 無料で利用可能
+      const response = await axios.get(`https://api.waqi.info/feed/geo:${this.lat};${this.lon}`, {
         params: {
-          token: this.apiKey // 代替 API キー（World Air Quality Index）
+          token: process.env.WAQI_TOKEN || this.apiKey
         }
       });
-      return response.data.data;
+
+      if (response.data.status === 'ok' && response.data.data) {
+        // AQI値を取得（デフォルトは不要な場合）
+        return response.data.data.aqi || 50; // デフォルト: 中程度
+      }
+      return 50; // デフォルト値
     } catch (error) {
-      console.warn('AQI 取得エラー:', error.message);
-      return null;
+      console.warn('AQI 取得エラー（WAQI API）:', error.message);
+      return 50; // デフォルト値
     }
   }
 

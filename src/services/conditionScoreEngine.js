@@ -275,8 +275,9 @@ class ConditionScoreEngine {
    * 72時間の1時間刻みスコアを計算
    * @param {Array} hourlyData - WeatherService.getHourlyForecast72h()の結果
    * @param {Array} scheduleData - Google Calendar の予定配列（オプション）
+   * @param {number} aqi - 空気質指数（オプション、デフォルト: 50）
    */
-  calculateHourlyScores(hourlyData, scheduleData = []) {
+  calculateHourlyScores(hourlyData, scheduleData = [], aqi = 50) {
     const results = [];
 
     for (let i = 0; i < hourlyData.length; i++) {
@@ -293,7 +294,7 @@ class ConditionScoreEngine {
         temperatureDiff12h: this.calculateTempDiffScore(tempDiff12h),
         humidity: this.calculateHumidityScore(data.humidity, data.temperature),
         illumination: this.calculateSunshineScoreHourly(data.cloudiness, data.hour),
-        airQuality: 50, // 暫定値（将来WAQI API統合）
+        airQuality: this.calculateAirQualityScore(aqi, false), // 屋内判定は常にfalse（屋外活動を想定）
         pressure: this.calculatePressureScore(data.pressure),
         schedule: this.calculateScheduleScoreHourly(data.timestamp, scheduleData)
       };

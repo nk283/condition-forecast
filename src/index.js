@@ -58,17 +58,22 @@ async function forecastCondition() {
       console.warn('   予定なしで計算を続行します');
     }
 
-    // 3. 72時間の1時間刻みスコアを計算
+    // 3. AQI（空気質指数）を取得
+    console.log('\n💨 空気質指数を取得しています...');
+    const aqi = await weatherService.getAQI();
+    console.log(`✓ AQI を取得: ${aqi}`);
+
+    // 4. 72時間の1時間刻みスコアを計算
     console.log('\n🧮 72時間の体調スコアを計算しています...');
-    const hourlyScores = scoreEngine.calculateHourlyScores(hourly72h, scheduleData);
+    const hourlyScores = scoreEngine.calculateHourlyScores(hourly72h, scheduleData, aqi);
     console.log(`✓ 72時間のスコアを計算 (${hourlyScores.length}時間分)`);
 
-    // 4. 時間別スコアデータを保存
+    // 5. 時間別スコアデータを保存
     console.log('\n💾 時間別データを保存しています...');
     dataStorage.saveHourlyScores(hourlyScores);
     console.log('✓ 時間別スコアを保存');
 
-    // 5. 現在時刻のスコアを取得（レポート用）
+    // 6. 現在時刻のスコアを取得（レポート用）
     // 開始時刻が「昨日00:00」なので、インデックス = 24（今日分）+ 現在時刻（時間単位）
     const currentHour = now.getHours();
     const currentIndex = 24 + currentHour; // 昨日24時間 + 今日の現在時刻
@@ -79,7 +84,7 @@ async function forecastCondition() {
       feelsLike: currentScore.weatherData?.feelsLike || currentScore.weatherData?.temperature || 15  // 体感温度
     };
 
-    // 6. レポート生成（互換性のため）
+    // 7. レポート生成（互換性のため）
     console.log('\n📋 レポートを生成しています...');
     const reportGenerator = new ReportGenerator();
     const todayConditionData = {
@@ -122,6 +127,7 @@ async function forecastCondition() {
 
     // 8. HTML ダッシュボードを生成
     console.log('\n🎨 HTML ダッシュボードを生成しています...');
+    htmlGenerator.setAQI(aqi); // AQIをダッシュボード生成器に渡す
     const dashboardPath = htmlGenerator.generateHourlyDashboard(hourlyScores);
     console.log(`✓ ダッシュボード生成: ${dashboardPath}`);
 

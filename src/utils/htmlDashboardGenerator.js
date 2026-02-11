@@ -7,6 +7,14 @@ const path = require('path');
 class HtmlDashboardGenerator {
   constructor(outputPath = 'dashboard.html') {
     this.outputPath = outputPath;
+    this.aqi = 50; // デフォルト値
+  }
+
+  /**
+   * AQIをセット
+   */
+  setAQI(aqi) {
+    this.aqi = aqi || 50;
   }
 
   /**
@@ -835,6 +843,8 @@ class HtmlDashboardGenerator {
     const tempDiffScores = hourlyScores.map(s => s.factorScores.temperatureDiff12h);
     const humidityScores = hourlyScores.map(s => s.factorScores.humidity);
     const illuminationScores = hourlyScores.map(s => s.factorScores.illumination);
+    const pressureScores = hourlyScores.map(s => s.factorScores.pressure);
+    const airQualityScores = hourlyScores.map(s => s.factorScores.airQuality);
     const scheduleScores = hourlyScores.map(s => s.factorScores.schedule);
 
     // 実データ配列の準備（デュアル軸グラフ用）
@@ -842,6 +852,7 @@ class HtmlDashboardGenerator {
     const tempDifferences = hourlyScores.map(s => s.tempDiff12h || 0);
     const humidities = hourlyScores.map(s => s.weatherData?.humidity || 60);
     const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || 50);
+    const pressures = hourlyScores.map(s => s.weatherData?.pressure || 1013);
 
     // 軸範囲を計算（データに応じて動的調整）
     const scoreAxisRange = this.calculateScoreAxisRange(totalScores);
@@ -849,6 +860,7 @@ class HtmlDashboardGenerator {
     const tempDiffAxisRange = this.calculateDataAxisRange(tempDifferences);
     const humidityAxisRange = this.calculateDataAxisRange(humidities);
     const cloudAxisRange = this.calculateDataAxisRange(cloudCovers);
+    const pressureAxisRange = this.calculateDataAxisRange(pressures);
 
     // 現在時刻を取得
     const now = new Date();
@@ -1071,6 +1083,20 @@ class HtmlDashboardGenerator {
         <h2>☀️ 日照スコア推移</h2>
         <canvas id="illuminationChart"></canvas>
         <div class="note">💡 日没後（18:00以降）は中立値（70点）</div>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="card">
+        <h2>🎈 気圧スコア推移</h2>
+        <canvas id="pressureChart"></canvas>
+        <div class="note">🌪️ 低気圧（1000hPa未満）で頭がぼーっとする可能性</div>
+      </div>
+
+      <div class="card">
+        <h2>💨 空気質スコア推移</h2>
+        <canvas id="airQualityChart"></canvas>
+        <div class="note">⚠️ AQI 50以下=良好、100以上=中程度、150以上=不健康</div>
       </div>
     </div>
 
@@ -1323,6 +1349,90 @@ class HtmlDashboardGenerator {
             max: ${cloudAxisRange.max},
             title: { display: true, text: '雲量（%）' },
             grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    // 気圧スコアグラフ
+    new Chart(document.getElementById('pressureChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [
+          {
+            label: '気圧スコア（左軸）',
+            data: ${JSON.stringify(pressureScores)},
+            borderColor: 'rgb(76, 175, 80)',
+            backgroundColor: 'rgba(76, 175, 80, 0.1)',
+            fill: true,
+            tension: 0.4,
+            yAxisID: 'y'
+          },
+          {
+            label: '実気圧hPa（右軸）',
+            data: ${JSON.stringify(pressures)},
+            borderColor: 'rgb(33, 150, 243)',
+            backgroundColor: 'rgba(33, 150, 243, 0.1)',
+            fill: false,
+            tension: 0.4,
+            yAxisID: 'y1'
+          }
+        ]
+      },
+      options: {
+        responsive: true,
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          y: {
+            type: 'linear',
+            display: true,
+            position: 'left',
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
+          },
+          y1: {
+            type: 'linear',
+            display: true,
+            position: 'right',
+            min: ${pressureAxisRange.min},
+            max: ${pressureAxisRange.max},
+            title: { display: true, text: '気圧（hPa）' },
+            grid: { drawOnChartArea: false }
+          }
+        }
+      }
+    });
+
+    // 空気質スコアグラフ
+    new Chart(document.getElementById('airQualityChart'), {
+      type: 'line',
+      data: {
+        labels: ${JSON.stringify(labels)},
+        datasets: [{
+          label: '空気質スコア',
+          data: ${JSON.stringify(airQualityScores)},
+          borderColor: 'rgb(156, 39, 176)',
+          backgroundColor: 'rgba(156, 39, 176, 0.1)',
+          fill: true,
+          tension: 0.4,
+          pointBackgroundColor: function(context) {
+            const value = context.parsed.y;
+            if (value >= 80) return 'rgb(76, 175, 80)';
+            if (value >= 60) return 'rgb(255, 193, 7)';
+            if (value >= 40) return 'rgb(255, 152, 0)';
+            return 'rgb(244, 67, 54)';
+          }
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          y: {
+            min: 0,
+            max: 100,
+            title: { display: true, text: 'スコア' }
           }
         }
       }
