@@ -267,32 +267,45 @@ class DataStorage {
       }
 
       // 新しいデータを追加（重複チェック）
+      // 注: null データも含めてすべて保存（72時間の時間スロットを維持）
       hourlyScores.forEach(score => {
-        // データがない場合（factorScores === null）はスキップ
-        if (!score.factorScores) {
-          return;
-        }
-
         const exists = allData.find(d => d.timestamp === score.timestamp);
         if (!exists) {
-          // スコアを保存可能な形式に変換
-          allData.push({
-            timestamp: score.timestamp,
-            hour: score.hour,
-            date: score.date,
-            totalScore: Math.round(score.totalScore),
-            factorScores: {
-              temperature: Math.round(score.factorScores.temperature),
-              temperatureDiff12h: Math.round(score.factorScores.temperatureDiff12h),
-              humidity: Math.round(score.factorScores.humidity),
-              illumination: Math.round(score.factorScores.illumination),
-              airQuality: Math.round(score.factorScores.airQuality),
-              pressure: Math.round(score.factorScores.pressure),
-              schedule: Math.round(score.factorScores.schedule)
-            },
-            weatherData: score.weatherData,
-            tempDiff12h: score.tempDiff12h
-          });
+          // データがない場合も含めてすべて保存
+          if (!score.factorScores) {
+            // null データの場合
+            allData.push({
+              timestamp: score.timestamp,
+              hour: score.hour,
+              date: score.date,
+              totalScore: null,
+              factorScores: null,
+              weatherData: null,
+              tempDiff12h: null,
+              pressureDiff12h: null
+            });
+          } else {
+            // スコアを保存可能な形式に変換
+            allData.push({
+              timestamp: score.timestamp,
+              hour: score.hour,
+              date: score.date,
+              totalScore: Math.round(score.totalScore),
+              factorScores: {
+                temperature: Math.round(score.factorScores.temperature),
+                temperatureDiff12h: Math.round(score.factorScores.temperatureDiff12h),
+                humidity: Math.round(score.factorScores.humidity),
+                illumination: Math.round(score.factorScores.illumination),
+                airQuality: Math.round(score.factorScores.airQuality),
+                pressure: Math.round(score.factorScores.pressure),
+                pressureDifference: Math.round(score.factorScores.pressureDifference),
+                schedule: Math.round(score.factorScores.schedule)
+              },
+              weatherData: score.weatherData,
+              tempDiff12h: score.tempDiff12h,
+              pressureDiff12h: score.pressureDiff12h
+            });
+          }
         }
       });
 
