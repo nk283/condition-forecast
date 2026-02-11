@@ -266,12 +266,54 @@ class DataStorage {
         allData = JSON.parse(content);
       }
 
-      // 新しいデータを追加（重複チェック）
-      // 注: null データも含めてすべて保存（72時間の時間スロットを維持）
+      // 新しいデータを追加または上書き（重複チェック）
+      // 注: null データは既存の有効データを上書きしない（保存済みデータを保護）
       hourlyScores.forEach(score => {
-        const exists = allData.find(d => d.timestamp === score.timestamp);
-        if (!exists) {
-          // データがない場合も含めてすべて保存
+        const existingIndex = allData.findIndex(d => d.timestamp === score.timestamp);
+
+        if (existingIndex !== -1) {
+          // 既存データの場合
+          // null データの場合は既存データを保護（上書きしない）
+          if (!score.factorScores && allData[existingIndex].factorScores) {
+            // 既存データが有効なら、null データで上書きしない
+            return;
+          }
+
+          // 有効なデータ、または既存データも null の場合は上書き
+          if (!score.factorScores) {
+            allData[existingIndex] = {
+              timestamp: score.timestamp,
+              hour: score.hour,
+              date: score.date,
+              totalScore: null,
+              factorScores: null,
+              weatherData: null,
+              tempDiff12h: null,
+              pressureDiff12h: null
+            };
+          } else {
+            allData[existingIndex] = {
+              timestamp: score.timestamp,
+              hour: score.hour,
+              date: score.date,
+              totalScore: Math.round(score.totalScore),
+              factorScores: {
+                temperature: Math.round(score.factorScores.temperature),
+                temperatureDiff12h: Math.round(score.factorScores.temperatureDiff12h),
+                humidity: Math.round(score.factorScores.humidity),
+                illumination: Math.round(score.factorScores.illumination),
+                airQuality: Math.round(score.factorScores.airQuality),
+                pressure: Math.round(score.factorScores.pressure),
+                pressureDifference: Math.round(score.factorScores.pressureDifference),
+                schedule: Math.round(score.factorScores.schedule)
+              },
+              weatherData: score.weatherData,
+              tempDiff12h: score.tempDiff12h,
+              pressureDiff12h: score.pressureDiff12h
+            };
+          }
+        } else {
+          // 新規データの場合は追加
           if (!score.factorScores) {
             // null データの場合
             allData.push({
@@ -417,6 +459,112 @@ class DataStorage {
     } catch (error) {
       console.warn('重複データ抽出エラー:', error.message);
       return {};
+    }
+  }
+
+  /**
+   * テスト用：2月10日の24時間ダミーデータを保存
+   */
+  saveDummy24hData() {
+    try {
+      const dummyScores = [];
+      const targetDate = new Date('2026-02-10T00:00:00');
+
+      // 24時間分のダミーデータを生成
+      for (let hour = 0; hour < 24; hour++) {
+        const timestamp = new Date(targetDate);
+        timestamp.setHours(hour);
+        // formatLocalDateTime と同じ形式でタイムスタンプを生成
+        const year = timestamp.getFullYear();
+        const month = String(timestamp.getMonth() + 1).padStart(2, '0');
+        const day = String(timestamp.getDate()).padStart(2, '0');
+        const hours = String(hour).padStart(2, '0');
+        const minutes = String(timestamp.getMinutes()).padStart(2, '0');
+        const seconds = String(timestamp.getSeconds()).padStart(2, '0');
+        const timeStr = `${year}-${month}-${day}T${hours}:${minutes}:${seconds}`;
+
+        // 気温：日中（9-17時）は10-15℃、朝晩は5-8℃
+        let temp;
+        if (hour >= 9 && hour < 18) {
+          temp = 10 + ((hour - 9) / 9) * 5; // 10℃～15℃
+        } else if (hour >= 6) {
+          temp = 15 - ((hour - 18) / 6) * 10; // 下降
+        } else {
+          temp = 5 + (hour / 6) * 1; // 5℃～6℃
+        }
+
+        // 雲量：朝9時＝20%（快晴）、昼12時＝40%（晴れ）、夕方18時＝50%（曇り）
+        let cloudiness;
+        if (hour >= 6 && hour < 18) {
+          cloudiness = 20 + Math.abs((hour - 12) / 6) * 30; // 20～50%
+        } else {
+          cloudiness = 80; // 夜間は高めの雲量
+        }
+
+        // 湿度：朝高い(70%)、昼低い(40%)
+        const humidity = 40 + Math.abs(hour - 12) / 12 * 30;
+
+        // 気圧：標準1015 hPa
+        const pressure = 1015 + (Math.sin(hour / 12 * Math.PI) * 5);
+
+        const dummyScore = {
+          timestamp: timeStr,
+          hour: hour,
+          date: timestamp.toLocaleDateString('ja-JP'),
+          totalScore: Math.round(70 + (Math.cos((hour - 12) / 12 * Math.PI) * 20)),
+          factorScores: {
+            temperature: Math.round(Math.max(20, Math.min(100, 100 - Math.abs(temp - 10) * 5))),
+            temperatureDiff12h: 85,
+            humidity: Math.round(Math.max(30, Math.min(100, 100 - Math.abs(humidity - 50) * 1.5))),
+            illumination: hour >= 6 && hour < 18 ? Math.round(100 - cloudiness) : 50,
+            airQuality: 90,
+            pressure: Math.round(Math.max(20, Math.min(100, 100 - Math.abs(pressure - 1015) * 2))),
+            schedule: hour >= 9 && hour < 17 ? 50 : 100 // 9-17時は仕事と仮定
+          },
+          weatherData: {
+            temperature: temp,
+            humidity: humidity,
+            pressure: pressure,
+            cloudiness: cloudiness,
+            windSpeed: 3,
+            weatherDescription: cloudiness < 30 ? '快晴' : cloudiness < 60 ? '晴れ' : '曇り'
+          },
+          tempDiff12h: 4,
+          pressureDiff12h: 2
+        };
+
+        dummyScores.push(dummyScore);
+      }
+
+      // 既存データを読み込み
+      let allData = [];
+      if (fs.existsSync(this.hourlyStoragePath)) {
+        const content = fs.readFileSync(this.hourlyStoragePath, 'utf8');
+        allData = JSON.parse(content);
+      }
+
+      // ダミーデータを既存データにマージ（同じtimestampなら上書き）
+      dummyScores.forEach(dummyScore => {
+        const existingIndex = allData.findIndex(d => d.timestamp === dummyScore.timestamp);
+        if (existingIndex !== -1) {
+          allData[existingIndex] = dummyScore;
+        } else {
+          allData.push(dummyScore);
+        }
+      });
+
+      // ファイルに保存
+      const dataDir = path.dirname(this.hourlyStoragePath);
+      if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+      }
+
+      fs.writeFileSync(this.hourlyStoragePath, JSON.stringify(allData, null, 2), 'utf8');
+      console.log(`✅ 2月10日の24時間ダミーデータを保存しました (${dummyScores.length}件)`);
+      return true;
+    } catch (error) {
+      console.error('ダミーデータ保存エラー:', error.message);
+      return false;
     }
   }
 }
