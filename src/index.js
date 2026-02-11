@@ -77,11 +77,30 @@ async function forecastCondition() {
     // 開始時刻が「昨日00:00」なので、インデックス = 24（今日分）+ 現在時刻（時間単位）
     const currentHour = now.getHours();
     const currentIndex = 24 + currentHour; // 昨日24時間 + 今日の現在時刻
-    const currentScore = hourlyScores[Math.min(currentIndex, 71)] || hourlyScores[24]; // 範囲外なら今日0時に
+
+    // 有効なデータを検索（現在時刻から逆順で探す）
+    let currentScore = null;
+    for (let i = Math.min(currentIndex, 71); i >= 0; i--) {
+      if (hourlyScores[i] && hourlyScores[i].factorScores) {
+        currentScore = hourlyScores[i];
+        break;
+      }
+    }
+
+    // 有効なデータがない場合はデフォルトを使用
+    if (!currentScore) {
+      currentScore = {
+        weatherData: null,
+        factorScores: null,
+        tempDiff12h: 0,
+        totalScore: 0
+      };
+    }
+
     const currentWeather = {
-      ...currentScore.weatherData || {},
-      tempDiff12h: currentScore.tempDiff12h || 0,  // 過去12時間の気温差
-      feelsLike: currentScore.weatherData?.feelsLike || currentScore.weatherData?.temperature || 15  // 体感温度
+      ...(currentScore && currentScore.weatherData ? currentScore.weatherData : {}),
+      tempDiff12h: (currentScore && currentScore.tempDiff12h) || 0,  // 過去12時間の気温差
+      feelsLike: (currentScore && currentScore.weatherData && currentScore.weatherData.feelsLike) || (currentScore && currentScore.weatherData && currentScore.weatherData.temperature) || 15  // 体感温度
     };
 
     // 7. レポート生成（互換性のため）
@@ -95,18 +114,18 @@ async function forecastCondition() {
       aqi: 50,
       temperatureMax: currentWeather.temperature || 15,
       temperatureMin: currentWeather.temperature || 15,
-      tempDiff12h: currentScore.tempDiff12h || 0,  // 過去12時間の気温差を追加
+      tempDiff12h: (currentScore && currentScore.tempDiff12h) || 0,  // 過去12時間の気温差を追加
       scheduleAnalysis: { hasEvents: false, hasMeetings: false, hasOutdoorActivities: false, sleepInterruption: false, mealInterruption: false }
     };
     // スコアキーを統一（temperatureDiff12h → temperatureDifference）
-    const unifiedScores = {
+    const unifiedScores = currentScore && currentScore.factorScores ? {
       ...currentScore.factorScores,
       temperatureDifference: currentScore.factorScores.temperatureDiff12h
-    };
+    } : { temperatureDifference: 0 };
 
     const todayDetailedAnalysis = scoreEngine.getDetailedAnalysis(unifiedScores, todayConditionData);
     const report = reportGenerator.generateReport(
-      { totalScore: currentScore.totalScore, factorScores: unifiedScores, evaluation: scoreEngine.getEvaluation(currentScore.totalScore) },
+      { totalScore: (currentScore && currentScore.totalScore) || 0, factorScores: unifiedScores, evaluation: scoreEngine.getEvaluation((currentScore && currentScore.totalScore) || 0) },
       todayDetailedAnalysis,
       currentWeather,
       now
@@ -134,6 +153,7 @@ async function forecastCondition() {
     return { report, hourlyScores };
   } catch (error) {
     console.error('❌ エラーが発生しました:', error.message);
+    console.error('スタックトレース:', error.stack);
     process.exit(1);
   }
 }

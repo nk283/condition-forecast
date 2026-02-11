@@ -833,29 +833,37 @@ class HtmlDashboardGenerator {
     }
 
     // グラフ用データ準備
-    const labels = hourlyScores.map(s => {
+    console.log(`🔍 ダッシュボード生成: hourlyScores.length = ${hourlyScores.length}`);
+
+    const labels = hourlyScores.map((s, i) => {
+      if (!s || !s.timestamp) {
+        console.warn(`⚠️  インデックス${i}のデータが不完全: ${JSON.stringify(s)}`);
+        return `データなし`;
+      }
       const date = new Date(s.timestamp);
       return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
     });
 
-    const totalScores = hourlyScores.map(s => s.totalScore);
-    const tempScores = hourlyScores.map(s => s.factorScores.temperature);
-    const tempDiffScores = hourlyScores.map(s => s.factorScores.temperatureDiff12h);
-    const humidityScores = hourlyScores.map(s => s.factorScores.humidity);
-    const illuminationScores = hourlyScores.map(s => s.factorScores.illumination);
-    const pressureScores = hourlyScores.map(s => s.factorScores.pressure);
-    const pressureDiffScores = hourlyScores.map(s => s.factorScores.pressureDifference);
-    const airQualityScores = hourlyScores.map(s => s.factorScores.airQuality);
-    const scheduleScores = hourlyScores.map(s => s.factorScores.schedule);
+    // スコアデータ: データがない場合は null を設定（グラフがギャップを自動作成）
+    const totalScores = hourlyScores.map(s => s.factorScores ? s.totalScore : null);
+    const tempScores = hourlyScores.map(s => s.factorScores?.temperature || null);
+    const tempDiffScores = hourlyScores.map(s => s.factorScores?.temperatureDiff12h || null);
+    const humidityScores = hourlyScores.map(s => s.factorScores?.humidity || null);
+    const illuminationScores = hourlyScores.map(s => s.factorScores?.illumination || null);
+    const pressureScores = hourlyScores.map(s => s.factorScores?.pressure || null);
+    const pressureDiffScores = hourlyScores.map(s => s.factorScores?.pressureDifference || null);
+    const airQualityScores = hourlyScores.map(s => s.factorScores?.airQuality || null);
+    const scheduleScores = hourlyScores.map(s => s.factorScores?.schedule || null);
 
     // 実データ配列の準備（デュアル軸グラフ用）
-    const temperatures = hourlyScores.map(s => s.weatherData?.temperature || 15);
-    const tempDifferences = hourlyScores.map(s => s.tempDiff12h || 0);
-    const humidities = hourlyScores.map(s => s.weatherData?.humidity || 60);
-    const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || 50);
-    const pressures = hourlyScores.map(s => s.weatherData?.pressure || 1013);
-    const pressureDifferences = hourlyScores.map(s => s.pressureDiff12h || 0); // 過去12時間の気圧差
-    const aqiValues = hourlyScores.map(() => this.aqi); // AQIは全時間で統一値
+    // データがない場合は null を設定（グラフがギャップを自動作成）
+    const temperatures = hourlyScores.map(s => s.weatherData?.temperature || null);
+    const tempDifferences = hourlyScores.map(s => (s.weatherData && s.tempDiff12h !== undefined) ? s.tempDiff12h : null);
+    const humidities = hourlyScores.map(s => s.weatherData?.humidity || null);
+    const cloudCovers = hourlyScores.map(s => s.weatherData?.cloudiness || null);
+    const pressures = hourlyScores.map(s => s.weatherData?.pressure || null);
+    const pressureDifferences = hourlyScores.map(s => (s.weatherData && s.pressureDiff12h !== undefined) ? s.pressureDiff12h : null); // 過去12時間の気圧差
+    const aqiValues = hourlyScores.map(s => s.weatherData ? this.aqi : null); // データがない場合は null
 
     // 軸範囲を計算（データに応じて動的調整）
     const scoreAxisRange = this.calculateScoreAxisRange(totalScores);
@@ -880,6 +888,11 @@ class HtmlDashboardGenerator {
     tableHtml += '</tr></thead><tbody>';
 
     hourlyScores.forEach((score, index) => {
+      // データが存在しない場合はスキップ
+      if (!score.factorScores || !score.weatherData) {
+        return;
+      }
+
       const date = new Date(score.timestamp);
       const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
 
@@ -1131,6 +1144,31 @@ class HtmlDashboardGenerator {
   </div>
 
   <script>
+    // 【重要】グラフ表示用データ配列
+    // テンプレート内で生データを埋め込み、スクリプト内で処理
+    const hourlyScoresData = ${JSON.stringify(hourlyScores)};
+    const labelsData = ${JSON.stringify(labels)};
+
+    // スコアデータ: データがない場合は null を設定（グラフがギャップを自動作成）
+    const totalScoresData = hourlyScoresData.map(s => s.factorScores ? s.totalScore : null);
+    const tempScoresData = hourlyScoresData.map(s => s.factorScores?.temperature || null);
+    const tempDiffScoresData = hourlyScoresData.map(s => s.factorScores?.temperatureDiff12h || null);
+    const humidityScoresData = hourlyScoresData.map(s => s.factorScores?.humidity || null);
+    const illuminationScoresData = hourlyScoresData.map(s => s.factorScores?.illumination || null);
+    const pressureScoresData = hourlyScoresData.map(s => s.factorScores?.pressure || null);
+    const pressureDiffScoresData = hourlyScoresData.map(s => s.factorScores?.pressureDifference || null);
+    const airQualityScoresData = hourlyScoresData.map(s => s.factorScores?.airQuality || null);
+    const scheduleScoresData = hourlyScoresData.map(s => s.factorScores?.schedule || null);
+
+    // 実データ配列（デュアル軸グラフ用）
+    const temperaturesData = hourlyScoresData.map(s => s.weatherData?.temperature || null);
+    const tempDifferencesData = hourlyScoresData.map(s => (s.weatherData && s.tempDiff12h !== undefined) ? s.tempDiff12h : null);
+    const humiditiesData = hourlyScoresData.map(s => s.weatherData?.humidity || null);
+    const cloudCoversData = hourlyScoresData.map(s => s.weatherData?.cloudiness || null);
+    const pressuresData = hourlyScoresData.map(s => s.weatherData?.pressure || null);
+    const pressureDifferencesData = hourlyScoresData.map(s => (s.weatherData && s.pressureDiff12h !== undefined) ? s.pressureDiff12h : null);
+    const aqiValuesData = hourlyScoresData.map(s => s.weatherData ? ${this.aqi} : null);
+
     // 現在時刻のインデックス
     const currentTimeIndex = ${currentIndex};
 
@@ -1173,10 +1211,10 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('totalScoreChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [{
           label: '総合スコア',
-          data: ${JSON.stringify(totalScores)},
+          data: totalScoresData,
           borderColor: 'rgb(102, 126, 234)',
           backgroundColor: 'rgba(102, 126, 234, 0.1)',
           fill: true,
@@ -1211,11 +1249,11 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('temperatureChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [
           {
             label: '気温スコア（左軸）',
-            data: ${JSON.stringify(tempScores)},
+            data: tempScoresData,
             borderColor: 'rgb(255, 152, 0)',
             backgroundColor: 'rgba(255, 152, 0, 0.1)',
             fill: true,
@@ -1224,7 +1262,7 @@ class HtmlDashboardGenerator {
           },
           {
             label: '実気温℃（右軸）',
-            data: ${JSON.stringify(temperatures)},
+            data: temperaturesData,
             borderColor: 'rgb(244, 67, 54)',
             backgroundColor: 'rgba(244, 67, 54, 0.1)',
             fill: false,
@@ -1263,11 +1301,11 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('tempDiffChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [
           {
             label: '気温差スコア（左軸）',
-            data: ${JSON.stringify(tempDiffScores)},
+            data: tempDiffScoresData,
             borderColor: 'rgb(244, 67, 54)',
             backgroundColor: 'rgba(244, 67, 54, 0.1)',
             fill: true,
@@ -1276,7 +1314,7 @@ class HtmlDashboardGenerator {
           },
           {
             label: '実気温差℃（右軸）',
-            data: ${JSON.stringify(tempDifferences)},
+            data: tempDifferencesData,
             borderColor: 'rgb(156, 39, 176)',
             backgroundColor: 'rgba(156, 39, 176, 0.1)',
             fill: false,
@@ -1315,11 +1353,11 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('humidityChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [
           {
             label: '湿度スコア（左軸）',
-            data: ${JSON.stringify(humidityScores)},
+            data: humidityScoresData,
             borderColor: 'rgb(33, 150, 243)',
             backgroundColor: 'rgba(33, 150, 243, 0.1)',
             fill: true,
@@ -1328,7 +1366,7 @@ class HtmlDashboardGenerator {
           },
           {
             label: '実湿度%（右軸）',
-            data: ${JSON.stringify(humidities)},
+            data: humiditiesData,
             borderColor: 'rgb(0, 150, 136)',
             backgroundColor: 'rgba(0, 150, 136, 0.1)',
             fill: false,
@@ -1367,11 +1405,11 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('illuminationChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [
           {
             label: '日照スコア（左軸）',
-            data: ${JSON.stringify(illuminationScores)},
+            data: illuminationScoresData,
             borderColor: 'rgb(255, 193, 7)',
             backgroundColor: 'rgba(255, 193, 7, 0.1)',
             fill: true,
@@ -1380,7 +1418,7 @@ class HtmlDashboardGenerator {
           },
           {
             label: '雲量%（右軸）',
-            data: ${JSON.stringify(cloudCovers)},
+            data: cloudCoversData,
             borderColor: 'rgb(158, 158, 158)',
             backgroundColor: 'rgba(158, 158, 158, 0.1)',
             fill: false,
@@ -1419,11 +1457,11 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('pressureChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [
           {
             label: '気圧スコア（左軸）',
-            data: ${JSON.stringify(pressureScores)},
+            data: pressureScoresData,
             borderColor: 'rgb(76, 175, 80)',
             backgroundColor: 'rgba(76, 175, 80, 0.1)',
             fill: true,
@@ -1432,7 +1470,7 @@ class HtmlDashboardGenerator {
           },
           {
             label: '実気圧hPa（右軸）',
-            data: ${JSON.stringify(pressures)},
+            data: pressuresData,
             borderColor: 'rgb(33, 150, 243)',
             backgroundColor: 'rgba(33, 150, 243, 0.1)',
             fill: false,
@@ -1471,11 +1509,11 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('pressureDiffChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [
           {
             label: '気圧差スコア（左軸）',
-            data: ${JSON.stringify(pressureDiffScores)},
+            data: pressureDiffScoresData,
             borderColor: 'rgb(76, 175, 80)',
             backgroundColor: 'rgba(76, 175, 80, 0.1)',
             fill: true,
@@ -1484,7 +1522,7 @@ class HtmlDashboardGenerator {
           },
           {
             label: '実気圧差hPa（右軸）',
-            data: ${JSON.stringify(pressureDifferences)},
+            data: pressureDifferencesData,
             borderColor: 'rgb(244, 67, 54)',
             backgroundColor: 'rgba(244, 67, 54, 0.1)',
             fill: false,
@@ -1523,11 +1561,11 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('airQualityChart'), {
       type: 'line',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [
           {
             label: '空気質スコア（左軸）',
-            data: ${JSON.stringify(airQualityScores)},
+            data: airQualityScoresData,
             borderColor: 'rgb(156, 39, 176)',
             backgroundColor: 'rgba(156, 39, 176, 0.1)',
             fill: true,
@@ -1543,7 +1581,7 @@ class HtmlDashboardGenerator {
           },
           {
             label: '実AQI値（右軸）',
-            data: ${JSON.stringify(aqiValues)},
+            data: aqiValuesData,
             borderColor: 'rgb(233, 30, 99)',
             backgroundColor: 'rgba(233, 30, 99, 0.1)',
             fill: false,
@@ -1582,10 +1620,10 @@ class HtmlDashboardGenerator {
     new Chart(document.getElementById('scheduleChart'), {
       type: 'bar',
       data: {
-        labels: ${JSON.stringify(labels)},
+        labels: labelsData,
         datasets: [{
           label: '予定スコア（予定あり=0, なし=100）',
-          data: ${JSON.stringify(scheduleScores)},
+          data: scheduleScoresData,
           backgroundColor: function(context) {
             return context.parsed.y === 0 ? 'rgba(244, 67, 54, 0.7)' : 'rgba(76, 175, 80, 0.7)';
           }
@@ -1608,8 +1646,16 @@ class HtmlDashboardGenerator {
    * 総合スコア用の Y軸範囲を計算（下限50、または10刻みで調整）
    */
   calculateScoreAxisRange(scores) {
-    const minScore = Math.min(...scores);
-    const maxScore = Math.max(...scores);
+    // null値を除外して最小・最大値を計算
+    const validScores = scores.filter(s => s !== null && s !== undefined);
+
+    // データがない場合はデフォルト範囲を返す
+    if (validScores.length === 0) {
+      return { min: 50, max: 100 };
+    }
+
+    const minScore = Math.min(...validScores);
+    const maxScore = Math.max(...validScores);
 
     let minAxis = 50;
     let maxAxis = 100;
@@ -1636,8 +1682,16 @@ class HtmlDashboardGenerator {
    * 実データ用の Y軸範囲を計算（5刻みで自動調整）
    */
   calculateDataAxisRange(values) {
-    const minValue = Math.min(...values);
-    const maxValue = Math.max(...values);
+    // null値を除外して最小・最大値を計算
+    const validValues = values.filter(v => v !== null && v !== undefined);
+
+    // データがない場合はデフォルト範囲を返す
+    if (validValues.length === 0) {
+      return { min: 0, max: 100 };
+    }
+
+    const minValue = Math.min(...validValues);
+    const maxValue = Math.max(...validValues);
 
     // 下限を5刻みで計算
     const minAxis = Math.floor(minValue / 5) * 5;
