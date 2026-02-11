@@ -121,11 +121,16 @@ class WeatherService {
       startTime.setHours(0, 0, 0, 0);
       startTime.setDate(startTime.getDate() - 1); // 昨日に設定
 
-      // 今日の00:00:00を計算（昨日と今日の境界）
-      const todayStart = new Date(startTime);
-      todayStart.setDate(todayStart.getDate() + 1);
+      // 現在時刻（APIの切り替え境界）
+      const nowStartOfHour = new Date(now);
+      nowStartOfHour.setMinutes(0, 0, 0);
 
       const hourlyData = [];
+
+      // 【前回実行時のデータを活用】過去ファイルから重複データを取得
+      const previousWeatherData = this.dataStorage.getOverlappingWeatherData(startTime);
+
+      console.log(`📊 過去ファイルから ${Object.keys(previousWeatherData).length} 件のデータを取得`);
 
       // 1時間刻みの配列を生成（72時間分）
       // 昨日00:00 ～ 明日23:00（72時間）
@@ -135,18 +140,20 @@ class WeatherService {
 
         let weatherData;
 
-        // *** 重要な分岐 ***
-        if (targetTime < todayStart) {
-          // 【昨日のデータ】過去ファイルから取得を試みる
-          weatherData = this.getYesterdayWeatherFromStorage(targetTime);
-
-          // 過去ファイルにデータがない場合のみ、予報データで補間（初回実行時など）
-          if (!weatherData) {
-            weatherData = this.interpolateWeatherData(forecast3h, targetTime);
-          }
-        } else {
-          // 【今日以降のデータ】予報APIから補間
+        // *** 3段階のロジック ***
+        if (previousWeatherData[localDateTime]) {
+          // 【優先1】過去ファイルに存在するデータを使用（最も信頼性が高い）
+          weatherData = previousWeatherData[localDateTime];
+          // console.log(`  📂 ${localDateTime}: 過去データを使用`);
+        } else if (targetTime >= nowStartOfHour) {
+          // 【優先2】現在時刻以降のデータは、APIの予報データから補間
           weatherData = this.interpolateWeatherData(forecast3h, targetTime);
+          // console.log(`  🔮 ${localDateTime}: 予報データから補間`);
+        } else {
+          // 【優先3】現在時刻より過去で、過去ファイルにもないデータ
+          // （初回実行時など）最も近い予報データで代用
+          weatherData = this.useClosestData(forecast3h, targetTime);
+          // console.log(`  ⚠️ ${localDateTime}: 最近接データで補完`);
         }
 
         hourlyData.push({
@@ -163,66 +170,6 @@ class WeatherService {
     } catch (error) {
       console.error('72時間データ取得エラー:', error.message);
       throw error;
-    }
-  }
-
-  /**
-   * 昨日の天気データを過去ファイルから取得
-   * @param {Date} targetTime - 取得したい時刻
-   * @returns {Object|null} 天気データ、またはnull（ファイルに存在しない場合）
-   */
-  getYesterdayWeatherFromStorage(targetTime) {
-    try {
-      // 昨日00:00 ～ 昨日23:59 のデータを取得
-      const yesterday = new Date(targetTime);
-      yesterday.setHours(0, 0, 0, 0);
-
-      const tomorrowStart = new Date(yesterday);
-      tomorrowStart.setDate(tomorrowStart.getDate() + 1);
-
-      // 過去データから昨日のスコアを取得
-      const yesterdayScores = this.dataStorage.getHourlyScores(yesterday, tomorrowStart);
-
-      if (yesterdayScores.length === 0) {
-        // 過去データがない場合は null を返す
-        return null;
-      }
-
-      // targetTime に最も近いスコアを見つける
-      const targetUnix = targetTime.getTime() / 1000;
-      let closestScore = null;
-      let minDiff = Infinity;
-
-      for (const score of yesterdayScores) {
-        const scoreTime = new Date(score.timestamp).getTime() / 1000;
-        const diff = Math.abs(scoreTime - targetUnix);
-        if (diff < minDiff) {
-          minDiff = diff;
-          closestScore = score;
-        }
-      }
-
-      if (closestScore && closestScore.weatherData) {
-        // 過去データから天気情報を復元
-        return {
-          temperature: closestScore.weatherData.temperature || 15,
-          humidity: closestScore.weatherData.humidity || 60,
-          pressure: closestScore.weatherData.pressure || 1013,
-          cloudiness: closestScore.weatherData.cloudiness || 50,
-          windSpeed: closestScore.weatherData.windSpeed || 5,
-          feelsLike: closestScore.weatherData.feelsLike || 15,
-          visibility: closestScore.weatherData.visibility || 10000,
-          rainVolume: closestScore.weatherData.rainVolume || 0,
-          weatherMain: closestScore.weatherData.weatherMain || 'Clouds',
-          weatherDescription: closestScore.weatherData.weatherDescription || '曇り',
-          weatherIcon: closestScore.weatherData.weatherIcon || '04d'
-        };
-      }
-
-      return null;
-    } catch (error) {
-      console.warn('過去データ取得エラー:', error.message);
-      return null; // エラー時は null を返して、予報データで補間させる
     }
   }
 

@@ -348,6 +348,58 @@ class DataStorage {
       return [];
     }
   }
+
+  /**
+   * 指定期間のデータを取得（天気データ抽出用）
+   * @param {Date} startTime - 開始時刻
+   * @param {Date} endTime - 終了時刻
+   * @returns {Object} キー: timestampの形式で、天気データのみを抽出したオブジェクト
+   */
+  getWeatherDataByTimeRange(startTime, endTime) {
+    try {
+      const scores = this.getHourlyScores(startTime, endTime);
+      const weatherMap = {};
+
+      scores.forEach(score => {
+        if (score.weatherData) {
+          weatherMap[score.timestamp] = score.weatherData;
+        }
+      });
+
+      return weatherMap;
+    } catch (error) {
+      console.warn('天気データ取得エラー:', error.message);
+      return {};
+    }
+  }
+
+  /**
+   * 72時間範囲で前回のデータと重複しているデータを抽出
+   * @param {Date} targetStartTime - 今回の72時間開始時刻
+   * @returns {Object} キー: timestampの形式で、存在するデータを抽出
+   */
+  getOverlappingWeatherData(targetStartTime) {
+    try {
+      // 今回の72時間範囲: targetStartTime ～ targetStartTime + 72時間
+      const targetEndTime = new Date(targetStartTime.getTime() + 72 * 60 * 60 * 1000);
+
+      // 過去ファイルから該当期間のデータをすべて取得
+      const scores = this.getHourlyScores(targetStartTime, targetEndTime);
+      const weatherMap = {};
+
+      scores.forEach(score => {
+        if (score.weatherData && score.timestamp) {
+          weatherMap[score.timestamp] = score.weatherData;
+        }
+      });
+
+      console.log(`📦 過去データから ${Object.keys(weatherMap).length} 件の天気データを復元`);
+      return weatherMap;
+    } catch (error) {
+      console.warn('重複データ抽出エラー:', error.message);
+      return {};
+    }
+  }
 }
 
 module.exports = DataStorage;
