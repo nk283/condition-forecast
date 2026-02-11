@@ -888,20 +888,12 @@ class HtmlDashboardGenerator {
     tableHtml += '</tr></thead><tbody>';
 
     hourlyScores.forEach((score, index) => {
-      // データが存在しない場合はスキップ
-      if (!score.factorScores || !score.weatherData) {
-        return;
-      }
-
       const date = new Date(score.timestamp);
       const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
 
-      // totalScore が NaN の場合は 0 を使用
-      const totalScore = isNaN(score.totalScore) ? 0 : score.totalScore;
-      const color = this.getScoreColor(totalScore);
-
       // 現在時刻を判定（時間単位で比較）
       const isCurrentHour =
+        score.factorScores && score.weatherData &&
         date.getUTCFullYear() === now.getUTCFullYear() &&
         date.getUTCMonth() === now.getUTCMonth() &&
         date.getUTCDate() === now.getUTCDate() &&
@@ -912,17 +904,30 @@ class HtmlDashboardGenerator {
       }
 
       const rowClass = isCurrentHour ? 'class="current-hour"' : '';
-      tableHtml += `<tr ${rowClass}>
-        <td>${timeStr}</td>
-        <td style="background-color: ${color}; color: white; font-weight: bold;">${totalScore}</td>
-        <td>${Math.round(score.factorScores.temperature || 0)}</td>
-        <td>${Math.round(score.factorScores.temperatureDiff12h || 0)}</td>
-        <td>${Math.round(score.factorScores.humidity || 0)}</td>
-        <td>${Math.round(score.factorScores.illumination || 0)}</td>
-        <td>${Math.round(score.factorScores.pressure || 0)}</td>
-        <td>${Math.round(score.factorScores.airQuality || 0)}</td>
-        <td>${score.factorScores.schedule === 0 ? '📅' : '✓'}</td>
-      </tr>`;
+
+      // データが存在しない場合は空白セルで表示
+      if (!score.factorScores || !score.weatherData) {
+        tableHtml += `<tr ${rowClass}>
+          <td>${timeStr}</td>
+          <td colspan="8" style="text-align: center; color: #ccc;">データなし</td>
+        </tr>`;
+      } else {
+        // totalScore が NaN の場合は 0 を使用
+        const totalScore = isNaN(score.totalScore) ? 0 : score.totalScore;
+        const color = this.getScoreColor(totalScore);
+
+        tableHtml += `<tr ${rowClass}>
+          <td>${timeStr}</td>
+          <td style="background-color: ${color}; color: white; font-weight: bold;">${totalScore}</td>
+          <td>${Math.round(score.factorScores.temperature || 0)}</td>
+          <td>${Math.round(score.factorScores.temperatureDiff12h || 0)}</td>
+          <td>${Math.round(score.factorScores.humidity || 0)}</td>
+          <td>${Math.round(score.factorScores.illumination || 0)}</td>
+          <td>${Math.round(score.factorScores.pressure || 0)}</td>
+          <td>${Math.round(score.factorScores.airQuality || 0)}</td>
+          <td>${score.factorScores.schedule === 0 ? '📅' : '✓'}</td>
+        </tr>`;
+      }
     });
 
     tableHtml += '</tbody></table>';
