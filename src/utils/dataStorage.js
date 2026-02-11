@@ -268,6 +268,11 @@ class DataStorage {
 
       // 新しいデータを追加（重複チェック）
       hourlyScores.forEach(score => {
+        // データがない場合（factorScores === null）はスキップ
+        if (!score.factorScores) {
+          return;
+        }
+
         const exists = allData.find(d => d.timestamp === score.timestamp);
         if (!exists) {
           // スコアを保存可能な形式に変換

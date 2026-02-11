@@ -78,16 +78,22 @@ async function forecastCondition() {
     const currentHour = now.getHours();
     const currentIndex = 24 + currentHour; // 昨日24時間 + 今日の現在時刻
 
-    // 有効なデータを検索（現在時刻から逆順で探す）
-    let currentScore = null;
-    for (let i = Math.min(currentIndex, 71); i >= 0; i--) {
-      if (hourlyScores[i] && hourlyScores[i].factorScores) {
-        currentScore = hourlyScores[i];
-        break;
+    // 現在時刻のスコアを直接取得（データなしの可能性あり）
+    let currentScore = hourlyScores[Math.min(currentIndex, 71)];
+    console.log(`🔍 currentIndex=${Math.min(currentIndex, 71)}, currentScore.factorScores=${currentScore ? (currentScore.factorScores ? 'あり' : 'null') : 'undefined'}`);
+
+    // 現在時刻にデータがない場合は、直近の有効なデータを検索
+    if (!currentScore || !currentScore.factorScores) {
+      for (let i = Math.min(currentIndex, 71); i >= 0; i--) {
+        if (hourlyScores[i] && hourlyScores[i].factorScores) {
+          currentScore = hourlyScores[i];
+          console.log(`📌 現在時刻（${currentHour}時）のデータがないため、インデックス${i}時のデータを使用します`);
+          break;
+        }
       }
     }
 
-    // 有効なデータがない場合はデフォルトを使用
+    // それでもデータがない場合はデフォルトを使用
     if (!currentScore) {
       currentScore = {
         weatherData: null,

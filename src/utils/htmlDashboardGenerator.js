@@ -1147,7 +1147,12 @@ class HtmlDashboardGenerator {
     // 【重要】グラフ表示用データ配列
     // テンプレート内で生データを埋め込み、スクリプト内で処理
     const hourlyScoresData = ${JSON.stringify(hourlyScores)};
-    const labelsData = ${JSON.stringify(labels)};
+
+    // ラベルデータを再構築（72時間分全て、データがない時間帯も含める）
+    const labelsData = hourlyScoresData.map(s => {
+      const date = new Date(s.timestamp);
+      return \`\${date.getMonth() + 1}/\${date.getDate()} \${String(date.getHours()).padStart(2, '0')}:00\`;
+    });
 
     // スコアデータ: データがない場合は null を設定（グラフがギャップを自動作成）
     const totalScoresData = hourlyScoresData.map(s => s.factorScores ? s.totalScore : null);

@@ -327,13 +327,23 @@ class ConditionScoreEngine {
     for (let i = 0; i < hourlyData.length; i++) {
       const data = hourlyData[i];
 
-      // データが null の場合はスキップ（不足データは記録しない）
+      // データが null の場合も結果配列に含める（ギャップとして記録）
       if (data.temperature === null || data.temperature === undefined ||
           data.humidity === null || data.humidity === undefined ||
           data.pressure === null || data.pressure === undefined ||
           data.cloudiness === null || data.cloudiness === undefined) {
-        // console.log(`⏭️  ${data.timestamp}: データなしのためスキップ`);
-        continue; // スコア計算をスキップ
+        // データなしのオブジェクトを作成（グラフでギャップになる）
+        results.push({
+          timestamp: data.timestamp,
+          hour: data.hour,
+          date: data.date,
+          totalScore: null,
+          factorScores: null,  // null を明示的に設定
+          weatherData: null,
+          tempDiff12h: null,
+          pressureDiff12h: null
+        });
+        continue;
       }
 
       // 過去12時間の気温データと気圧データを取得（ i-12 ～ i）
