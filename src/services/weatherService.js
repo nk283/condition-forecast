@@ -140,15 +140,16 @@ class WeatherService {
 
         let weatherData;
 
-        // *** 3段階のロジック ***
-        if (previousWeatherData[localDateTime]) {
-          // 【優先1】過去ファイルに存在するデータを使用（最も信頼性が高い）
-          weatherData = previousWeatherData[localDateTime];
-          // console.log(`  📂 ${localDateTime}: 過去データを使用`);
-        } else if (targetTime >= nowStartOfHour) {
-          // 【優先2】現在時刻以降のデータは、APIの予報データから補間
+        // *** 改善版3段階のロジック ***
+        // 優先度: 新規予報 > 過去ファイル > 最近接データ
+        if (targetTime >= nowStartOfHour) {
+          // 【優先1】現在時刻以降のデータは、APIの予報データから補間（最新かつ正確）
           weatherData = this.interpolateWeatherData(forecast3h, targetTime);
-          // console.log(`  🔮 ${localDateTime}: 予報データから補間`);
+          // console.log(`  🔮 ${localDateTime}: 新規予報データから補間`);
+        } else if (previousWeatherData[localDateTime]) {
+          // 【優先2】現在時刻より過去で、過去ファイルに存在するデータを使用
+          weatherData = previousWeatherData[localDateTime];
+          // console.log(`  📂 ${localDateTime}: 過去ファイルから復元`);
         } else {
           // 【優先3】現在時刻より過去で、過去ファイルにもないデータ
           // （初回実行時など）最も近い予報データで代用
