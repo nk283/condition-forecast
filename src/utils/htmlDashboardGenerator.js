@@ -1131,6 +1131,44 @@ class HtmlDashboardGenerator {
   </div>
 
   <script>
+    // 現在時刻のインデックス
+    const currentTimeIndex = ${currentIndex};
+
+    // 現在時刻に縦線を引くプラグイン
+    const verticalLinePlugin = {
+      id: 'verticalLine',
+      afterDatasetsDraw(chart) {
+        if (currentTimeIndex === -1) return; // 現在時刻が見つからない場合はスキップ
+
+        const xScale = chart.scales.x;
+        const yScale = chart.scales.y;
+        const ctx = chart.ctx;
+
+        // 現在時刻のX座標を計算
+        const xCoord = xScale.getPixelForValue(currentTimeIndex);
+        const yTop = yScale.getPixelForValue(yScale.max);
+        const yBottom = yScale.getPixelForValue(yScale.min);
+
+        // 縦線を描画（赤色、破線）
+        ctx.save();
+        ctx.strokeStyle = 'rgba(255, 0, 0, 0.6)';
+        ctx.lineWidth = 2;
+        ctx.setLineDash([5, 5]); // 破線
+        ctx.beginPath();
+        ctx.moveTo(xCoord, yTop);
+        ctx.lineTo(xCoord, yBottom);
+        ctx.stroke();
+
+        // 「現在」ラベルを追加
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+        ctx.font = 'bold 12px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('NOW', xCoord, yTop - 10);
+
+        ctx.restore();
+      }
+    };
+
     // 総合スコアグラフ
     new Chart(document.getElementById('totalScoreChart'), {
       type: 'line',
@@ -1161,8 +1199,12 @@ class HtmlDashboardGenerator {
             min: ${scoreAxisRange.min},
             max: ${scoreAxisRange.max}
           }
+        },
+        plugins: {
+          verticalLine: {}
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 気温スコア + 実気温 デュアル軸グラフ
@@ -1213,7 +1255,8 @@ class HtmlDashboardGenerator {
             grid: { drawOnChartArea: false }
           }
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 気温差スコア + 実気温差 デュアル軸グラフ
@@ -1264,7 +1307,8 @@ class HtmlDashboardGenerator {
             grid: { drawOnChartArea: false }
           }
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 湿度スコア + 実湿度 デュアル軸グラフ
@@ -1315,7 +1359,8 @@ class HtmlDashboardGenerator {
             grid: { drawOnChartArea: false }
           }
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 日照スコア + 実雲量 デュアル軸グラフ
@@ -1366,7 +1411,8 @@ class HtmlDashboardGenerator {
             grid: { drawOnChartArea: false }
           }
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 気圧スコアグラフ
@@ -1417,7 +1463,8 @@ class HtmlDashboardGenerator {
             grid: { drawOnChartArea: false }
           }
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 気圧差スコアグラフ
@@ -1468,7 +1515,8 @@ class HtmlDashboardGenerator {
             grid: { drawOnChartArea: false }
           }
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 空気質スコアグラフ
@@ -1526,7 +1574,8 @@ class HtmlDashboardGenerator {
             grid: { drawOnChartArea: false }
           }
         }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
 
     // 予定スコアグラフ
@@ -1545,7 +1594,8 @@ class HtmlDashboardGenerator {
       options: {
         responsive: true,
         scales: { y: { min: 0, max: 100 } }
-      }
+      },
+      plugins: [verticalLinePlugin]
     });
   </script>
 </body>
