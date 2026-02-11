@@ -65,8 +65,29 @@ async function forecastCondition() {
             cloudiness: savedScore.weatherData?.cloudiness || null,
             windSpeed: savedScore.weatherData?.windSpeed || null,
             feelsLike: savedScore.weatherData?.feelsLike || null,
-            weatherDescription: savedScore.weatherData?.weatherDescription || null
+            weatherDescription: savedScore.weatherData?.weatherDescription || null,
+            // デフォルトの日の出・日没時刻（API データがない場合）
+            sunriseHour: 6,
+            sunsetHour: 18
           };
+        } else if (existingIndex !== -1) {
+          // API データが存在する場合も、sunriseHour/sunsetHour がなければデフォルト値を設定
+          if (!hourly72h[existingIndex].sunriseHour) {
+            hourly72h[existingIndex].sunriseHour = 6;
+          }
+          if (!hourly72h[existingIndex].sunsetHour) {
+            hourly72h[existingIndex].sunsetHour = 18;
+          }
+        }
+      });
+
+      // 全データに対してデフォルト値を設定（念のため）
+      hourly72h.forEach((item, idx) => {
+        if (!item.sunriseHour) {
+          hourly72h[idx].sunriseHour = 6;
+        }
+        if (!item.sunsetHour) {
+          hourly72h[idx].sunsetHour = 18;
         }
       });
 
