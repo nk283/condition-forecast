@@ -62,20 +62,25 @@ async function forecastCondition() {
           const savedWeatherData = savedScore.weatherData;
 
           // 【重要】API データが完全に欠落している場合（temperature が null）
-          // → 保存済みデータで完全に置換
+          // → 保存済みデータ（気象情報）で完全に置換
           if (apiData.temperature === null || apiData.temperature === undefined) {
-            hourly72h[existingIndex] = {
-              ...apiData,
-              temperature: savedWeatherData?.temperature || null,
-              humidity: savedWeatherData?.humidity || null,
-              pressure: savedWeatherData?.pressure || null,
-              cloudiness: savedWeatherData?.cloudiness || null,
-              windSpeed: savedWeatherData?.windSpeed || null,
-              feelsLike: savedWeatherData?.feelsLike || null,
+            const restoredData = {
+              timestamp: apiData.timestamp,
+              hour: apiData.hour,
+              date: apiData.date,
+              dateObj: apiData.dateObj,
+              temperature: savedWeatherData?.temperature !== undefined ? savedWeatherData.temperature : null,
+              humidity: savedWeatherData?.humidity !== undefined ? savedWeatherData.humidity : null,
+              pressure: savedWeatherData?.pressure !== undefined ? savedWeatherData.pressure : null,
+              cloudiness: savedWeatherData?.cloudiness !== undefined ? savedWeatherData.cloudiness : null,
+              windSpeed: savedWeatherData?.windSpeed !== undefined ? savedWeatherData.windSpeed : null,
+              feelsLike: savedWeatherData?.feelsLike !== undefined ? savedWeatherData.feelsLike : null,
               weatherDescription: savedWeatherData?.weatherDescription || null,
-              sunriseHour: 6,
-              sunsetHour: 18
+              sunriseHour: savedWeatherData?.sunriseHour !== undefined ? savedWeatherData.sunriseHour : 6,
+              sunsetHour: savedWeatherData?.sunsetHour !== undefined ? savedWeatherData.sunsetHour : 18
             };
+
+            hourly72h[existingIndex] = restoredData;
           } else {
             // API データが存在する場合は、デフォルト値の設定のみ
             if (!hourly72h[existingIndex].sunriseHour) {
@@ -142,14 +147,12 @@ async function forecastCondition() {
 
     // 現在時刻のスコアを直接取得（データなしの可能性あり）
     let currentScore = hourlyScores[Math.min(currentIndex, 71)];
-    console.log(`🔍 currentIndex=${Math.min(currentIndex, 71)}, currentScore.factorScores=${currentScore ? (currentScore.factorScores ? 'あり' : 'null') : 'undefined'}`);
 
     // 現在時刻にデータがない場合は、直近の有効なデータを検索
     if (!currentScore || !currentScore.factorScores) {
       for (let i = Math.min(currentIndex, 71); i >= 0; i--) {
         if (hourlyScores[i] && hourlyScores[i].factorScores) {
           currentScore = hourlyScores[i];
-          console.log(`📌 現在時刻（${currentHour}時）のデータがないため、インデックス${i}時のデータを使用します`);
           break;
         }
       }
