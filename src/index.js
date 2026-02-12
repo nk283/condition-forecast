@@ -54,34 +54,39 @@ async function forecastCondition() {
       // 保存済みデータで hourly72h を補完
       savedScores.forEach(savedScore => {
         const existingIndex = hourly72h.findIndex(h => h.timestamp === savedScore.timestamp);
-        if (existingIndex !== -1 && !hourly72h[existingIndex].temperature) {
-          // API データがない場合、保存済みデータで補完
-          hourly72h[existingIndex] = {
-            ...hourly72h[existingIndex],
-            ...savedScore.weatherData,
-            temperature: savedScore.weatherData?.temperature || null,
-            humidity: savedScore.weatherData?.humidity || null,
-            pressure: savedScore.weatherData?.pressure || null,
-            cloudiness: savedScore.weatherData?.cloudiness || null,
-            windSpeed: savedScore.weatherData?.windSpeed || null,
-            feelsLike: savedScore.weatherData?.feelsLike || null,
-            weatherDescription: savedScore.weatherData?.weatherDescription || null,
-            // デフォルトの日の出・日没時刻（API データがない場合）
-            sunriseHour: 6,
-            sunsetHour: 18
-          };
-        } else if (existingIndex !== -1) {
-          // API データが存在する場合も、sunriseHour/sunsetHour がなければデフォルト値を設定
-          if (!hourly72h[existingIndex].sunriseHour) {
-            hourly72h[existingIndex].sunriseHour = 6;
-          }
-          if (!hourly72h[existingIndex].sunsetHour) {
-            hourly72h[existingIndex].sunsetHour = 18;
+
+        if (existingIndex !== -1) {
+          const apiData = hourly72h[existingIndex];
+          const savedWeatherData = savedScore.weatherData;
+
+          // 【重要】API データが完全に欠落している場合（temperature が null）
+          // → 保存済みデータで完全に置換
+          if (apiData.temperature === null || apiData.temperature === undefined) {
+            hourly72h[existingIndex] = {
+              ...apiData,
+              temperature: savedWeatherData?.temperature || null,
+              humidity: savedWeatherData?.humidity || null,
+              pressure: savedWeatherData?.pressure || null,
+              cloudiness: savedWeatherData?.cloudiness || null,
+              windSpeed: savedWeatherData?.windSpeed || null,
+              feelsLike: savedWeatherData?.feelsLike || null,
+              weatherDescription: savedWeatherData?.weatherDescription || null,
+              sunriseHour: 6,
+              sunsetHour: 18
+            };
+          } else {
+            // API データが存在する場合は、デフォルト値の設定のみ
+            if (!hourly72h[existingIndex].sunriseHour) {
+              hourly72h[existingIndex].sunriseHour = 6;
+            }
+            if (!hourly72h[existingIndex].sunsetHour) {
+              hourly72h[existingIndex].sunsetHour = 18;
+            }
           }
         }
       });
 
-      // 全データに対してデフォルト値を設定（念のため）
+      // 全データに対してデフォルト値を確認・設定（念のため）
       hourly72h.forEach((item, idx) => {
         if (!item.sunriseHour) {
           hourly72h[idx].sunriseHour = 6;

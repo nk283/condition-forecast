@@ -272,15 +272,21 @@ class DataStorage {
         const existingIndex = allData.findIndex(d => d.timestamp === score.timestamp);
 
         if (existingIndex !== -1) {
-          // 既存データの場合
-          // null データの場合は既存データを保護（上書きしない）
-          if (!score.factorScores && allData[existingIndex].factorScores) {
-            // 既存データが有効なら、null データで上書きしない
+          // 既存データが存在する場合
+          const existingData = allData[existingIndex];
+          const isExistingValid = existingData && existingData.factorScores !== null;
+          const isNewValid = score && score.factorScores !== null;
+
+          // 【重要】保護ロジック：
+          // null データで有効な既存データを上書きしない
+          if (!isNewValid && isExistingValid) {
+            // スキップ（既存データを保護）
             return;
           }
 
           // 有効なデータ、または既存データも null の場合は上書き
-          if (!score.factorScores) {
+          if (!isNewValid) {
+            // null データを保存
             allData[existingIndex] = {
               timestamp: score.timestamp,
               hour: score.hour,
@@ -292,6 +298,7 @@ class DataStorage {
               pressureDiff12h: null
             };
           } else {
+            // 有効なデータを保存
             allData[existingIndex] = {
               timestamp: score.timestamp,
               hour: score.hour,
