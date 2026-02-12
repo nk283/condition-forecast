@@ -122,6 +122,9 @@ class WeatherService {
     try {
       const forecast3h = await this.getForecast();
       console.log(`📊 API から取得した3時間刻みデータ: ${forecast3h.length}件`);
+      if (forecast3h.length > 0) {
+        console.log(`   取得範囲: ${forecast3h[0].timestamp.toLocaleString('ja-JP')} ～ ${forecast3h[forecast3h.length-1].timestamp.toLocaleString('ja-JP')}`);
+      }
       const now = new Date();
 
       // 昨日の00:00:00をローカルタイムで設定
