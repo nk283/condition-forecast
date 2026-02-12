@@ -16,35 +16,32 @@ class ConditionScoreEngine {
   }
 
   /**
-   * 気温スコアを計算（5℃～10℃が最適）
+   * 気温スコアを計算（段階的なロジック）
+   * 5℃以上: 100点（最適）
+   * 5℃～0℃: 1℃下がるごとに10点減点（5℃=100点, 0℃=50点）
+   * 0℃～-5℃: 1℃下がるごとに10点減点（0℃=50点, -5℃=0点）
+   * -5℃以下: 0点
    */
   calculateTemperatureScore(temp) {
-    // 最適温度: 5℃～10℃
-    const optimalMin = 5;
-    const optimalMax = 10;
-    const comfortMin = 5;
-    const comfortMax = 20;
-
-    if (temp >= optimalMin && temp <= optimalMax) {
-      return 100; // 最適
+    if (temp >= 5) {
+      // 5℃以上は100点（最適）
+      return 100;
     }
 
-    if (temp >= comfortMin && temp <= comfortMax) {
-      // 快適範囲内: 70-100
-      if (temp < optimalMin) {
-        return 70 + ((temp - comfortMin) / (optimalMin - comfortMin)) * 30;
-      } else {
-        return 70 + ((comfortMax - temp) / (comfortMax - optimalMax)) * 30;
-      }
+    if (temp >= 0 && temp < 5) {
+      // 5℃～0℃: 1℃下がるごとに10点減点
+      // 5℃=100点, 4℃=90点, 3℃=80点, ..., 0℃=50点
+      return 100 - (5 - temp) * 10;
     }
 
-    if (temp < comfortMin) {
-      // 寒冷
-      return Math.max(10, 70 - (comfortMin - temp) * 5);
+    if (temp >= -5 && temp < 0) {
+      // 0℃～-5℃: 1℃下がるごとに10点減点
+      // 0℃=50点, -1℃=40点, ..., -5℃=0点
+      return 50 - (0 - temp) * 10;
     }
 
-    // 高温: 20℃以上
-    return Math.max(20, 70 - (temp - comfortMax) * 5);
+    // -5℃以下: 0点
+    return 0;
   }
 
   /**
