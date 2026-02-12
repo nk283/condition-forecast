@@ -254,8 +254,9 @@ class DataStorage {
   /**
    * 時間別スコアを保存（72時間の1時間刻みデータ用）
    * @param {Array} hourlyScores - ConditionScoreEngine.calculateHourlyScores()の結果
+   * @param {Date} latestApiTime - API から取得した最新時刻（この時刻より過去は上書きしない）
    */
-  saveHourlyScores(hourlyScores) {
+  saveHourlyScores(hourlyScores, latestApiTime = null) {
     try {
       const filePath = path.join(this.storageDir, path.basename(this.hourlyStoragePath));
 
@@ -267,25 +268,28 @@ class DataStorage {
       }
 
       // 新しいデータを追加または上書き（重複チェック）
-      // 注: null データは既存の有効データを上書きしない（保存済みデータを保護）
+      // 【重要ルール】
+      // - latestApiTime より過去のデータ → 既存データがあれば上書きしない（保護）
+      // - latestApiTime 以降のデータ → 新規データで上書き・保存
       hourlyScores.forEach(score => {
         const existingIndex = allData.findIndex(d => d.timestamp === score.timestamp);
+        const scoreTime = new Date(score.timestamp);
+
+        // latestApiTime より過去かどうかを判定
+        const isPastData = latestApiTime && scoreTime < latestApiTime;
 
         if (existingIndex !== -1) {
           // 既存データが存在する場合
           const existingData = allData[existingIndex];
-          const isExistingValid = existingData && existingData.factorScores !== null;
-          const isNewValid = score && score.factorScores !== null;
 
-          // 【重要】保護ロジック：
-          // null データで有効な既存データを上書きしない
-          if (!isNewValid && isExistingValid) {
-            // スキップ（既存データを保護）
+          // 【重要】過去のデータは上書きしない（既存データを保護）
+          if (isPastData && existingData && existingData.factorScores !== null) {
+            // スキップ（既存の有効データを保護）
             return;
           }
 
-          // 有効なデータ、または既存データも null の場合は上書き
-          if (!isNewValid) {
+          // 有効なデータか null データかで分岐
+          if (!score.factorScores) {
             // null データを保存
             allData[existingIndex] = {
               timestamp: score.timestamp,

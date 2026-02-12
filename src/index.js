@@ -39,7 +39,9 @@ async function forecastCondition() {
 
     // 1. 72時間の1時間刻み天気データを取得
     console.log('⏳ 72時間の天気データを取得中...');
-    let hourly72h = await weatherService.getHourlyForecast72h();
+    const forecastResult = await weatherService.getHourlyForecast72h();
+    let hourly72h = forecastResult.hourlyData;
+    const latestApiTime = forecastResult.latestApiTime;
     console.log(`✓ 72時間の天気データを取得 (${hourly72h.length}時間分)`);
 
     // 1.5. 保存済みの過去データで補完（昨日のデータなど）
@@ -130,7 +132,7 @@ async function forecastCondition() {
 
     // 5. 時間別スコアデータを保存
     console.log('\n💾 時間別データを保存しています...');
-    dataStorage.saveHourlyScores(hourlyScores);
+    dataStorage.saveHourlyScores(hourlyScores, latestApiTime);
     console.log('✓ 時間別スコアを保存');
 
     // 6. 現在時刻のスコアを取得（レポート用）

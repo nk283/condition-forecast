@@ -178,7 +178,14 @@ class WeatherService {
       }
 
       console.log(`✅ 72時間の1時間刻みデータを生成しました (${hourlyData.length}件: 有効${validCount}件, null${nullCount}件)`);
-      return hourlyData;
+
+      // API データの最新時刻を返す（保存時のルール判定用）
+      const latestApiTime = forecast3h.length > 0 ? forecast3h[forecast3h.length - 1].timestamp : null;
+
+      return {
+        hourlyData: hourlyData,
+        latestApiTime: latestApiTime
+      };
     } catch (error) {
       console.error('72時間データ取得エラー:', error.message);
       throw error;
