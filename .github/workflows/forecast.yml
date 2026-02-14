@@ -4,11 +4,13 @@ on:
   schedule:
     # UTC時刻（日本時刻より-9時間）
     # 6時(JST) = 21時前日(UTC)
-    # 14時(JST) = 5時(UTC)
-    # 22時(JST) = 13時(UTC)
-    - cron: '0 21 * * *'  # 前日21時 = 6時JST
-    - cron: '0 5 * * *'   # 5時 = 14時JST
-    - cron: '0 13 * * *'  # 13時 = 22時JST
+    # 12時(JST) = 3時(UTC)
+    # 18時(JST) = 9時(UTC)
+    # 24時(JST) = 15時(UTC)
+    - cron: '0 21 * * *'  # 前日21時 = 6時JST（午前）
+    - cron: '0 3 * * *'   # 3時 = 12時JST（昼）
+    - cron: '0 9 * * *'   # 9時 = 18時JST（夕方）
+    - cron: '0 15 * * *'  # 15時 = 24時JST（深夜・翌日0時）
   workflow_dispatch:  # 手動実行用
 
 permissions:
