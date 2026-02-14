@@ -50,15 +50,6 @@ jobs:
             data/hourly_scores.json
           retention-days: 90
 
-      - name: Commit and push results
-        if: success()
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
-          git add dashboard_72h.html data/hourly_scores.json
-          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update forecast results [skip ci]" && git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git HEAD:${{ github.ref }})
-        continue-on-error: true
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: success()
