@@ -841,7 +841,9 @@ class HtmlDashboardGenerator {
         return `データなし`;
       }
       const date = new Date(s.timestamp);
-      return `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
+      // UTC時刻を日本時刻（JST）に変換（UTC+9）
+      const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      return `${jstDate.getMonth() + 1}/${jstDate.getDate()} ${String(jstDate.getHours()).padStart(2, '0')}:00`;
     });
 
     // スコアデータ: データがない場合は null を設定（グラフがギャップを自動作成）
@@ -889,15 +891,19 @@ class HtmlDashboardGenerator {
 
     hourlyScores.forEach((score, index) => {
       const date = new Date(score.timestamp);
-      const timeStr = `${date.getMonth() + 1}/${date.getDate()} ${String(date.getHours()).padStart(2, '0')}:00`;
+      // UTC時刻を日本時刻（JST）に変換（UTC+9）
+      const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      const timeStr = `${jstDate.getMonth() + 1}/${jstDate.getDate()} ${String(jstDate.getHours()).padStart(2, '0')}:00`;
 
       // 現在時刻を判定（時間単位で比較）
+      // JST時刻に変換して比較
+      const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
       const isCurrentHour =
         score.factorScores && score.weatherData &&
-        date.getUTCFullYear() === now.getUTCFullYear() &&
-        date.getUTCMonth() === now.getUTCMonth() &&
-        date.getUTCDate() === now.getUTCDate() &&
-        date.getUTCHours() === now.getUTCHours();
+        jstDate.getUTCFullYear() === jstNow.getUTCFullYear() &&
+        jstDate.getUTCMonth() === jstNow.getUTCMonth() &&
+        jstDate.getUTCDate() === jstNow.getUTCDate() &&
+        jstDate.getUTCHours() === jstNow.getUTCHours();
 
       if (isCurrentHour) {
         currentIndex = index;
@@ -1156,7 +1162,9 @@ class HtmlDashboardGenerator {
     // ラベルデータを再構築（72時間分全て、データがない時間帯も含める）
     const labelsData = hourlyScoresData.map(s => {
       const date = new Date(s.timestamp);
-      return \`\${date.getMonth() + 1}/\${date.getDate()} \${String(date.getHours()).padStart(2, '0')}:00\`;
+      // UTC時刻を日本時刻（JST）に変換（UTC+9）
+      const jstDate = new Date(date.getTime() + 9 * 60 * 60 * 1000);
+      return \`\${jstDate.getMonth() + 1}/\${jstDate.getDate()} \${String(jstDate.getHours()).padStart(2, '0')}:00\`;
     });
 
     // スコアデータ: データがない場合は null を設定（グラフがギャップを自動作成）
