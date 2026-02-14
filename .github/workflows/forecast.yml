@@ -11,6 +11,11 @@ on:
     - cron: '0 13 * * *'  # 13時 = 22時JST
   workflow_dispatch:  # 手動実行用
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
 jobs:
   forecast:
     runs-on: ubuntu-latest
@@ -50,24 +55,26 @@ jobs:
             data/hourly_scores.json
           retention-days: 90
 
-      - name: Deploy to GitHub Pages (git push method)
+      - name: Prepare GitHub Pages deployment
         if: success()
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Git設定
-          git config user.name "GitHub Actions"
-          git config user.email "actions@github.com"
+          mkdir -p pages-artifact
+          cp dashboard_72h.html pages-artifact/
+          mkdir -p pages-artifact/data
+          cp data/hourly_scores.json pages-artifact/data/
+          echo "Pages artifact prepared:"
+          ls -la pages-artifact/
 
-          # フォーサンスブランチを作成（既存の gh-pages を削除して新規作成）
-          git checkout --orphan gh-pages
-          git rm -rf .
+      - name: Upload Pages artifact
+        if: success()
+        uses: actions/upload-artifact@v4
+        with:
+          name: github-pages
+          path: pages-artifact/
 
-          # ビルド成果物をコミット
-          git add dashboard_72h.html data/hourly_scores.json
-          git commit -m "chore: update forecast dashboard - $(date '+%Y-%m-%d %H:%M:%S')" || true
-
-          # gh-pages ブランチをプッシュ
-          git push -f https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git gh-pages
+      - name: Deploy to GitHub Pages
+        if: success()
+        id: deployment
+        uses: actions/deploy-pages@v2
 
       # Slack通知は後で有効化（現在はテスト中のため無効）
