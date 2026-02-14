@@ -1182,8 +1182,23 @@ class HtmlDashboardGenerator {
     const pressureDifferencesData = hourlyScoresData.map(s => (s.weatherData && s.pressureDiff12h !== undefined) ? s.pressureDiff12h : null);
     const aqiValuesData = hourlyScoresData.map(s => s.weatherData ? ${this.aqi} : null);
 
-    // 現在時刻のインデックス
-    const currentTimeIndex = ${currentIndex};
+    // 現在時刻のインデックスをブラウザ側で動的に計算
+    function getCurrentTimeIndex() {
+      const now = new Date();
+      const nowYear = now.getFullYear();
+      const nowMonth = now.getMonth();
+      const nowDate = now.getDate();
+      const nowHour = now.getHours();
+      for (let i = 0; i < hourlyScoresData.length; i++) {
+        const d = new Date(hourlyScoresData[i].timestamp);
+        if (d.getFullYear() === nowYear && d.getMonth() === nowMonth &&
+            d.getDate() === nowDate && d.getHours() === nowHour) {
+          return i;
+        }
+      }
+      return -1;
+    }
+    const currentTimeIndex = getCurrentTimeIndex();
 
     // 現在時刻に縦線を引くプラグイン
     const verticalLinePlugin = {
