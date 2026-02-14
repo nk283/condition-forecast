@@ -50,12 +50,16 @@ jobs:
             data/hourly_scores.json
           retention-days: 90
 
+      - name: Create CNAME file
+        if: success()
+        run: echo "condition-forecast.github.io" > ./CNAME
+
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         if: success()
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: .
-          cname: condition-forecast.github.io
+          publish_dir: ./
+          force_orphan: true
 
       # Slack通知は後で有効化（現在はテスト中のため無効）
