@@ -81,8 +81,12 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          # ファイルを強制的に追加
-          git add -A dashboard_72h.html data/
+          # Git キャッシュをクリアして古いメタデータを削除
+          git rm -r --cached . || true
+          git add .
+
+          # ファイルを強制的に追加（-f で .gitignore を無視）
+          git add -f dashboard_72h.html data/
 
           # 変更があればコミット
           if ! git diff --cached --quiet; then
