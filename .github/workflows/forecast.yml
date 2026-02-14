@@ -96,8 +96,9 @@ jobs:
       - name: Send Slack notification (Success)
         if: success()
         uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "✅ 体調予報を更新しました",
@@ -136,8 +137,9 @@ jobs:
       - name: Send Slack notification (Failure)
         if: failure()
         uses: slackapi/slack-github-action@v1.24.0
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
         with:
-          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
           payload: |
             {
               "text": "❌ 体調予報の実行に失敗しました",
