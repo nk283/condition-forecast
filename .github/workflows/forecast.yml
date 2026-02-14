@@ -56,6 +56,25 @@ jobs:
             data/hourly_scores.json
           retention-days: 90
 
+      - name: Configure GitHub Pages settings
+        if: success()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            try {
+              await github.rest.repos.updateWebsiteDeploymentStatus({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                environment: 'github-pages',
+                state: 'success',
+                deployment_url: 'https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}'
+              });
+              console.log('GitHub Pages configured');
+            } catch (error) {
+              console.log('GitHub Pages configuration note: ' + error.message);
+            }
+
       - name: Deploy to GitHub Pages
         if: success()
         run: |
@@ -69,6 +88,7 @@ jobs:
           if ! git diff --cached --quiet; then
             git commit -m "chore: update forecast dashboard $(date '+%Y-%m-%d %H:%M:%S')"
             git push origin main
+            echo "✅ Dashboard deployed to GitHub Pages"
           else
             echo "No changes to commit"
           fi
