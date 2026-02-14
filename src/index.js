@@ -236,8 +236,12 @@ async function forecastCondition() {
           hour: '2-digit',
           minute: '2-digit'
         });
-        const scoreBar = '█'.repeat(Math.ceil(score.totalScore / 10)).padEnd(10, '░');
-        console.log(`  ${time} | ${scoreBar} ${score.totalScore.toFixed(0)}/100`);
+        if (score.totalScore != null) {
+          const scoreBar = '█'.repeat(Math.ceil(score.totalScore / 10)).padEnd(10, '░');
+          console.log(`  ${time} | ${scoreBar} ${score.totalScore.toFixed(0)}/100`);
+        } else {
+          console.log(`  ${time} | ░░░░░░░░░░ --/100 (データなし)`);
+        }
       });
     } else {
       console.log('  データなし');
