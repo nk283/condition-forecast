@@ -126,11 +126,53 @@ class WeatherService {
         console.log(`   取得範囲: ${forecast3h[0].timestamp.toLocaleString('ja-JP')} ～ ${forecast3h[forecast3h.length-1].timestamp.toLocaleString('ja-JP')}`);
       }
       const now = new Date();
+      console.log(`🕐 現在時刻（UTC）: ${now.toLocaleString('ja-JP')} (${now.toISOString()})`);
 
-      // 昨日の00:00:00をローカルタイムで設定
-      const startTime = new Date(now);
-      startTime.setHours(0, 0, 0, 0);
-      startTime.setDate(startTime.getDate() - 1); // 昨日に設定
+      // 日本時刻での「昨日の00:00:00」を計算
+      // JST = UTC + 9h のため、「昨日0:00 JST」を UTC に変換する
+
+      // ステップ1: 現在時刻を JST に変換
+      // JavaScript の Date は内部的には UTC なので、以下で JST 日付を取得できる
+      const jstNow = new Date(now.getTime() + 9 * 60 * 60 * 1000);
+      const jstYear = jstNow.getUTCFullYear();
+      const jstMonth = jstNow.getUTCMonth();
+      const jstDate = jstNow.getUTCDate();
+
+      console.log(`📍 JST 現在日付: ${jstYear}年${jstMonth + 1}月${jstDate}日`);
+
+      // ステップ2: 「昨日0:00 JST」を UTC で計算
+      // 昨日の日付を計算（月初の場合の処理も含む）
+      let yesterdayDate = jstDate - 1;
+      let yesterdayMonth = jstMonth;
+      let yesterdayYear = jstYear;
+      if (yesterdayDate < 1) {
+        yesterdayMonth--;
+        if (yesterdayMonth < 0) {
+          yesterdayMonth = 11;
+          yesterdayYear--;
+        }
+        // 前月の末日を計算（簡略版）
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        if (yesterdayMonth === 1 && ((yesterdayYear % 4 === 0 && yesterdayYear % 100 !== 0) || yesterdayYear % 400 === 0)) {
+          yesterdayDate = 29; // うるう年
+        } else {
+          yesterdayDate = daysInMonth[yesterdayMonth];
+        }
+      }
+
+      // 「昨日0:00 JST」をUTCで計算する正しい方法：
+      // JST = UTC + 9h なので
+      // 「昨日0:00 JST」 = 「昨日0:00 UTC + 9h」
+      // したがって UTC では「昨日0:00 UTC」= 「昨日0:00 JST - 9h」= 「一昨日15:00 UTC」
+      // つまり Date.UTC(year, month, date-1, 15, 0, 0) で「昨日0:00 JST」に対応する UTC 時刻が得られる
+
+      const startTimeUTC = new Date(Date.UTC(yesterdayYear, yesterdayMonth, yesterdayDate - 1, 15, 0, 0));
+      // startTimeUTC: UTC では「一昨日15:00」= JST では「昨日0:00」
+      const startJSTTime = new Date(startTimeUTC.getTime() + 9 * 60 * 60 * 1000);
+      const startJSTISO = startJSTTime.toISOString(); // "2026-02-14T00:00:00.000Z"
+      const startJSTDisplay = startJSTISO.slice(0, 16).replace('T', ' '); // "2026-02-14 00:00"
+
+      console.log(`📍 72時間開始時刻: ${startJSTDisplay} JST（昨日0:00）`);
 
       const hourlyData = [];
       let validCount = 0;
@@ -139,8 +181,12 @@ class WeatherService {
       // 1時間刻みの配列を生成（72時間分）
       // 昨日00:00 ～ 明日23:00（72時間）
       for (let i = 0; i < 72; i++) {
-        const targetTime = new Date(startTime.getTime() + i * 60 * 60 * 1000);
-        const localDateTime = this.formatLocalDateTime(targetTime);
+        const targetTime = new Date(startTimeUTC.getTime() + i * 60 * 60 * 1000);
+        // targetTime は UTC なので、JST に変換してから ISO 形式で出力
+        const jstDateTime = new Date(targetTime.getTime() + 9 * 60 * 60 * 1000);
+        const jstISOString = jstDateTime.toISOString();
+        // ISO形式 "2026-02-14T00:00:00.000Z" から "2026-02-14T00:00:00" を抽出
+        const localDateTime = jstISOString.slice(0, 19);
 
         // 最も近いAPIデータを使用（3時間のStep補間）
         let weatherData = null;
@@ -168,10 +214,17 @@ class WeatherService {
         const dataToAdd = weatherData ? { ...weatherData } : {};
         delete dataToAdd.timestamp; // API の timestamp (Date オブジェクト) を除外
 
+        // JST で日付と時間を計算
+        const year = jstDateTime.getUTCFullYear();
+        const month = String(jstDateTime.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(jstDateTime.getUTCDate()).padStart(2, '0');
+        const hour = jstDateTime.getUTCHours();
+        const jstDate = `${year}/${month}/${day}`;
+
         hourlyData.push({
-          timestamp: localDateTime,  // 文字列タイムスタンプ（localDateTime で固定）
-          hour: targetTime.getHours(),
-          date: targetTime.toLocaleDateString('ja-JP'),
+          timestamp: localDateTime,  // 文字列タイムスタンプ（JST）
+          hour: hour,  // JST の時間
+          date: jstDate,  // JST の日付
           dateObj: targetTime,
           ...dataToAdd  // API データの他のプロパティを展開
         });
