@@ -1,0 +1,142 @@
+name: Daily Condition Forecast
+
+on:
+  schedule:
+    # UTC時刻（日本時刻より-9時間）
+    # 6時(JST) = 21時前日(UTC)
+    # 14時(JST) = 5時(UTC)
+    # 22時(JST) = 13時(UTC)
+    - cron: '0 21 * * *'  # 前日21時 = 6時JST
+    - cron: '0 5 * * *'   # 5時 = 14時JST
+    - cron: '0 13 * * *'  # 13時 = 22時JST
+  workflow_dispatch:  # 手動実行用
+
+jobs:
+  forecast:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 18
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run condition forecast
+        env:
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          WEATHER_LAT: ${{ secrets.WEATHER_LAT }}
+          WEATHER_LON: ${{ secrets.WEATHER_LON }}
+          GOOGLE_CLIENT_ID: ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          GOOGLE_TOKEN: ${{ secrets.GOOGLE_TOKEN }}
+          NODE_ENV: production
+        run: npm start
+
+      - name: Upload dashboard artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: forecast-dashboard-${{ github.run_id }}
+          path: |
+            dashboard_72h.html
+            data/hourly_scores.json
+          retention-days: 90
+
+      - name: Commit and push results
+        if: success()
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+          git add dashboard_72h.html data/hourly_scores.json
+          git diff --quiet && git diff --staged --quiet || (git commit -m "chore: update forecast results [skip ci]" && git push)
+        continue-on-error: true
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        if: success()
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: .
+          exclude_assets: '.git,node_modules,*.md,src,public,.github'
+
+      - name: Send Slack notification (Success)
+        if: success()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "✅ 体調予報を更新しました",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "✅ 体調予報更新完了",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "fields": [
+                    {
+                      "type": "mrkdwn",
+                      "text": "*実行時刻*\n${{ github.event.schedule }}"
+                    },
+                    {
+                      "type": "mrkdwn",
+                      "text": "*実行者*\nGitHub Actions"
+                    }
+                  ]
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🔗 リンク*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|実行ログを見る>"
+                  }
+                }
+              ]
+            }
+
+      - name: Send Slack notification (Failure)
+        if: failure()
+        uses: slackapi/slack-github-action@v1.24.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "❌ 体調予報実行エラー",
+              "blocks": [
+                {
+                  "type": "header",
+                  "text": {
+                    "type": "plain_text",
+                    "text": "❌ エラー発生",
+                    "emoji": true
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*エラー内容*\n体調予報の実行に失敗しました。ログを確認してください。"
+                  }
+                },
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*🔗 ログ確認*\n<${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}|詳細ログを見る>"
+                  }
+                }
+              ]
+            }

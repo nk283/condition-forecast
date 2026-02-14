@@ -12,9 +12,11 @@ const HtmlDashboardGenerator = require('./utils/htmlDashboardGenerator');
  */
 async function forecastCondition() {
   try {
-    console.log('🌤️  体調予報システムを起動しています（72時間モード）...\n');
+    console.log('\n🌤️  体調予報システムを起動しています（72時間モード）...');
+    console.log(`⏰ 実行時刻: ${new Date().toLocaleString('ja-JP')}\n`);
 
     // サービスを初期化
+    console.log('🔧 サービスを初期化中...');
     const weatherService = new WeatherService(
       process.env.OPENWEATHER_API_KEY,
       parseFloat(process.env.WEATHER_LAT),
@@ -30,6 +32,7 @@ async function forecastCondition() {
     const scoreEngine = new ConditionScoreEngine();
     const dataStorage = new DataStorage();
     const htmlGenerator = new HtmlDashboardGenerator();
+    console.log('✅ サービス初期化完了\n');
 
     // データを収集
     console.log('📊 データを収集しています（72時間分）...');
@@ -219,11 +222,31 @@ async function forecastCondition() {
     console.log('\n🎨 HTML ダッシュボードを生成しています...');
     htmlGenerator.setAQI(aqi); // AQIをダッシュボード生成器に渡す
     const dashboardPath = htmlGenerator.generateHourlyDashboard(hourlyScores);
-    console.log(`✓ ダッシュボード生成: ${dashboardPath}`);
+    console.log(`✅ ダッシュボード生成: ${dashboardPath}`);
 
+    // 9. 未来12時間分のサマリー
+    console.log('\n📈 未来12時間の体調スコア予報:');
+    const forecast12h = hourlyScores
+      .filter(s => new Date(s.timestamp) > now)
+      .slice(0, 12);
+
+    if (forecast12h.length > 0) {
+      forecast12h.forEach((score) => {
+        const time = new Date(score.timestamp).toLocaleTimeString('ja-JP', {
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+        const scoreBar = '█'.repeat(Math.ceil(score.totalScore / 10)).padEnd(10, '░');
+        console.log(`  ${time} | ${scoreBar} ${score.totalScore.toFixed(0)}/100`);
+      });
+    } else {
+      console.log('  データなし');
+    }
+
+    console.log('\n✅ 実行完了\n');
     return { report, hourlyScores };
   } catch (error) {
-    console.error('❌ エラーが発生しました:', error.message);
+    console.error('\n❌ エラーが発生しました:', error.message);
     console.error('スタックトレース:', error.stack);
     process.exit(1);
   }

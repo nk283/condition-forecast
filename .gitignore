@@ -8,3 +8,28 @@ dashboard.html
 data/
 debug-env.js
 npm
+
+# Secrets & Credentials
+.env.production
+.env.*.local
+
+# OS
+Thumbs.db
+
+# IDE
+.vscode/settings.json
+.idea/
+
+# Build artifacts
+dist/
+build/
+
+# Test files
+generate_test_comparison.js
+test_comparison.html
+test_data_protection.js
+run_test_db.bat
+
+# Backups
+*.backup
+src/utils/htmlDashboardGenerator.js.backup
