@@ -12,9 +12,8 @@ on:
   workflow_dispatch:  # 手動実行用
 
 permissions:
-  contents: read
+  contents: write
   pages: write
-  id-token: write
 
 jobs:
   forecast:
@@ -24,6 +23,8 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node.js 18
         uses: actions/setup-node@v4
@@ -55,26 +56,21 @@ jobs:
             data/hourly_scores.json
           retention-days: 90
 
-      - name: Prepare GitHub Pages deployment
-        if: success()
-        run: |
-          mkdir -p pages-artifact
-          cp dashboard_72h.html pages-artifact/
-          mkdir -p pages-artifact/data
-          cp data/hourly_scores.json pages-artifact/data/
-          echo "Pages artifact prepared:"
-          ls -la pages-artifact/
-
-      - name: Upload Pages artifact
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: github-pages
-          path: pages-artifact/
-
       - name: Deploy to GitHub Pages
         if: success()
-        id: deployment
-        uses: actions/deploy-pages@v2
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
+
+          # ファイルを添加してコミット
+          git add dashboard_72h.html data/hourly_scores.json
+
+          # 変更があればコミット
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update forecast dashboard $(date '+%Y-%m-%d %H:%M:%S')"
+          fi
+
+          # プッシュ
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
 
       # Slack通知は後で有効化（現在はテスト中のため無効）
