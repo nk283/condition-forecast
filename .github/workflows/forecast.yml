@@ -50,16 +50,24 @@ jobs:
             data/hourly_scores.json
           retention-days: 90
 
-      - name: Create CNAME file
+      - name: Deploy to GitHub Pages (git push method)
         if: success()
-        run: echo "condition-forecast.github.io" > ./CNAME
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Git設定
+          git config user.name "GitHub Actions"
+          git config user.email "actions@github.com"
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        if: success()
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./
-          force_orphan: true
+          # フォーサンスブランチを作成（既存の gh-pages を削除して新規作成）
+          git checkout --orphan gh-pages
+          git rm -rf .
+
+          # ビルド成果物をコミット
+          git add dashboard_72h.html data/hourly_scores.json
+          git commit -m "chore: update forecast dashboard - $(date '+%Y-%m-%d %H:%M:%S')" || true
+
+          # gh-pages ブランチをプッシュ
+          git push -f https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git gh-pages
 
       # Slack通知は後で有効化（現在はテスト中のため無効）
