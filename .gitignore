@@ -5,7 +5,6 @@ token.json
 *.log
 .DS_Store
 dashboard.html
-data/
 debug-env.js
 npm
 
