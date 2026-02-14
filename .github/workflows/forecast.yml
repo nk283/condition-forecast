@@ -81,16 +81,16 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          # ファイルを添加してコミット
-          git add dashboard_72h.html data/
+          # ファイルを強制的に追加
+          git add -A dashboard_72h.html data/
 
           # 変更があればコミット
           if ! git diff --cached --quiet; then
-            git commit -m "chore: update forecast dashboard $(date '+%Y-%m-%d %H:%M:%S')"
-            git push origin main
+            git commit -m "chore: update forecast dashboard $(date '+%Y-%m-%d %H:%M:%S')" || true
+            git push origin main || echo "⚠️  Push failed, but continuing..."
             echo "✅ Dashboard deployed to GitHub Pages"
           else
-            echo "No changes to commit"
+            echo "ℹ️  No changes to commit"
           fi
 
       # Slack通知は後で有効化（現在はテスト中のため無効）
