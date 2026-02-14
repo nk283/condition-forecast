@@ -81,17 +81,13 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
-          # Git キャッシュをクリアして古いメタデータを削除
-          git rm -r --cached . || true
-          git add .
-
-          # ファイルを強制的に追加（-f で .gitignore を無視）
-          git add -f dashboard_72h.html data/
+          # ダッシュボードとデータファイルをステージング
+          git add dashboard_72h.html data/hourly_scores.json
 
           # 変更があればコミット
           if ! git diff --cached --quiet; then
-            git commit -m "chore: update forecast dashboard $(date '+%Y-%m-%d %H:%M:%S')" || true
-            git push origin main || echo "⚠️  Push failed, but continuing..."
+            git commit -m "chore: update forecast dashboard $(date '+%Y-%m-%d %H:%M:%S')"
+            git push origin main
             echo "✅ Dashboard deployed to GitHub Pages"
           else
             echo "ℹ️  No changes to commit"
