@@ -83,6 +83,9 @@ jobs:
           git config user.name "GitHub Actions"
           git config user.email "actions@github.com"
 
+          # リモートの最新変更を取得（並行実行時の競合を防止）
+          git pull --rebase origin main || true
+
           # ダッシュボードとデータファイルをステージング
           git add dashboard_72h.html data/hourly_scores.json
 
