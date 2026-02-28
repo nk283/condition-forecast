@@ -9502,5 +9502,629 @@
     },
     "tempDiff12h": 5,
     "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T00:00:00",
+    "hour": 0,
+    "date": "2026/03/02",
+    "totalScore": 85,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 94,
+      "humidity": 56,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.89,
+      "humidity": 82,
+      "pressure": 1021,
+      "cloudiness": 100,
+      "windSpeed": 1.93,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.6,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T01:00:00",
+    "hour": 1,
+    "date": "2026/03/02",
+    "totalScore": 85,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 94,
+      "humidity": 56,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.89,
+      "humidity": 82,
+      "pressure": 1021,
+      "cloudiness": 100,
+      "windSpeed": 1.93,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.6,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T02:00:00",
+    "hour": 2,
+    "date": "2026/03/02",
+    "totalScore": 86,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 56,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.62,
+      "humidity": 82,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.13,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 4.4,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T03:00:00",
+    "hour": 3,
+    "date": "2026/03/02",
+    "totalScore": 86,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 56,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.62,
+      "humidity": 82,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.13,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 4.4,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T04:00:00",
+    "hour": 4,
+    "date": "2026/03/02",
+    "totalScore": 86,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 56,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.62,
+      "humidity": 82,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.13,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 4.4,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T05:00:00",
+    "hour": 5,
+    "date": "2026/03/02",
+    "totalScore": 86,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 56,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.53,
+      "humidity": 82,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.11,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 1.7,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T06:00:00",
+    "hour": 6,
+    "date": "2026/03/02",
+    "totalScore": 78,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 56,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.53,
+      "humidity": 82,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.11,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 1.7,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T07:00:00",
+    "hour": 7,
+    "date": "2026/03/02",
+    "totalScore": 78,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 56,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 9.53,
+      "humidity": 82,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.11,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 1.7,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T08:00:00",
+    "hour": 8,
+    "date": "2026/03/02",
+    "totalScore": 81,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 74,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 11.25,
+      "humidity": 73,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.51,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 1.7,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T09:00:00",
+    "hour": 9,
+    "date": "2026/03/02",
+    "totalScore": 81,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 74,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 11.25,
+      "humidity": 73,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.51,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 1.7,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T10:00:00",
+    "hour": 10,
+    "date": "2026/03/02",
+    "totalScore": 81,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 74,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 11.25,
+      "humidity": 73,
+      "pressure": 1020,
+      "cloudiness": 100,
+      "windSpeed": 2.51,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 1.7,
+    "pressureDiff12h": 2
+  },
+  {
+    "timestamp": "2026-03-02T11:00:00",
+    "hour": 11,
+    "date": "2026/03/02",
+    "totalScore": 85,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 98,
+      "humidity": 100,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 14.71,
+      "humidity": 57,
+      "pressure": 1018,
+      "cloudiness": 100,
+      "windSpeed": 2.68,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.2,
+    "pressureDiff12h": 3
+  },
+  {
+    "timestamp": "2026-03-02T12:00:00",
+    "hour": 12,
+    "date": "2026/03/02",
+    "totalScore": 85,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 98,
+      "humidity": 100,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 14.71,
+      "humidity": 57,
+      "pressure": 1018,
+      "cloudiness": 100,
+      "windSpeed": 2.68,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.2,
+    "pressureDiff12h": 3
+  },
+  {
+    "timestamp": "2026-03-02T13:00:00",
+    "hour": 13,
+    "date": "2026/03/02",
+    "totalScore": 85,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 98,
+      "humidity": 100,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 14.71,
+      "humidity": 57,
+      "pressure": 1018,
+      "cloudiness": 100,
+      "windSpeed": 2.68,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.2,
+    "pressureDiff12h": 3
+  },
+  {
+    "timestamp": "2026-03-02T14:00:00",
+    "hour": 14,
+    "date": "2026/03/02",
+    "totalScore": 84,
+    "factorScores": {
+      "temperature": 99,
+      "temperatureDiff12h": 92,
+      "humidity": 100,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 15.33,
+      "humidity": 60,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.9,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.8,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T15:00:00",
+    "hour": 15,
+    "date": "2026/03/02",
+    "totalScore": 84,
+    "factorScores": {
+      "temperature": 99,
+      "temperatureDiff12h": 92,
+      "humidity": 100,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 15.33,
+      "humidity": 60,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.9,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.8,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T16:00:00",
+    "hour": 16,
+    "date": "2026/03/02",
+    "totalScore": 84,
+    "factorScores": {
+      "temperature": 99,
+      "temperatureDiff12h": 92,
+      "humidity": 100,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 15.33,
+      "humidity": 60,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.9,
+      "weatherDescription": "厚い雲"
+    },
+    "tempDiff12h": 5.8,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T17:00:00",
+    "hour": 17,
+    "date": "2026/03/02",
+    "totalScore": 77,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 92,
+      "humidity": 52,
+      "illumination": 0,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 12.16,
+      "humidity": 84,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.29,
+      "weatherDescription": "小雨"
+    },
+    "tempDiff12h": 5.8,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T18:00:00",
+    "hour": 18,
+    "date": "2026/03/02",
+    "totalScore": 85,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 92,
+      "humidity": 52,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 12.16,
+      "humidity": 84,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.29,
+      "weatherDescription": "小雨"
+    },
+    "tempDiff12h": 5.8,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T19:00:00",
+    "hour": 19,
+    "date": "2026/03/02",
+    "totalScore": 85,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 92,
+      "humidity": 52,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 12.16,
+      "humidity": 84,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.29,
+      "weatherDescription": "小雨"
+    },
+    "tempDiff12h": 5.8,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T20:00:00",
+    "hour": 20,
+    "date": "2026/03/02",
+    "totalScore": 82,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 32,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 11.24,
+      "humidity": 94,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.39,
+      "weatherDescription": "適度な雨"
+    },
+    "tempDiff12h": 4.1,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T21:00:00",
+    "hour": 21,
+    "date": "2026/03/02",
+    "totalScore": 82,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 32,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 11.24,
+      "humidity": 94,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.39,
+      "weatherDescription": "適度な雨"
+    },
+    "tempDiff12h": 4.1,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T22:00:00",
+    "hour": 22,
+    "date": "2026/03/02",
+    "totalScore": 82,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 100,
+      "humidity": 32,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 11.24,
+      "humidity": 94,
+      "pressure": 1016,
+      "cloudiness": 100,
+      "windSpeed": 2.39,
+      "weatherDescription": "適度な雨"
+    },
+    "tempDiff12h": 4.1,
+    "pressureDiff12h": 4
+  },
+  {
+    "timestamp": "2026-03-02T23:00:00",
+    "hour": 23,
+    "date": "2026/03/02",
+    "totalScore": 83,
+    "factorScores": {
+      "temperature": 100,
+      "temperatureDiff12h": 98,
+      "humidity": 36,
+      "illumination": 50,
+      "airQuality": 100,
+      "pressure": 100,
+      "pressureDifference": 100,
+      "schedule": 100
+    },
+    "weatherData": {
+      "temperature": 10.15,
+      "humidity": 92,
+      "pressure": 1015,
+      "cloudiness": 100,
+      "windSpeed": 2.62,
+      "weatherDescription": "小雨"
+    },
+    "tempDiff12h": 5.2,
+    "pressureDiff12h": 3
   }
 ]
